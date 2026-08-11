@@ -36,7 +36,7 @@ namespace imp
 		size_t operator()(const std::array<ty, n>& a) const
 		{
 			hasher h;
-			for (size_t i = 0; i < N; ++i)
+			for (size_t i = 0; i < n; ++i)
 				h.with<hash>(a[i]);
 			return h;
 		}
