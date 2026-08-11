@@ -29,10 +29,10 @@ namespace imp
 		}
 	};
 
-	template<typename ty, typename hash = std::hash<ty>>
+	template<typename hash>
 	struct stl_hash
 	{
-		template<size_t n>
+		template<typename ty, size_t n>
 		size_t operator()(const std::array<ty, n>& a) const
 		{
 			hasher h;
