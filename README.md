@@ -1,2 +1,2 @@
-# Imp
-A collection of C++ utilities
+# Imperious
+A collection of C++ utilities.
