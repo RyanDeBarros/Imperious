@@ -4,14 +4,19 @@
 
 namespace imp
 {
-	using type_erasure = size_t;
+	struct type_erasure
+	{
+	private:
+		size_t _index;
 
-	extern type_erasure erase_type(std::type_index ti);
+	public:
+		type_erasure(std::type_index ti);
+	};
 
 	template<typename ty>
 	type_erasure erase_type()
 	{
-		return erase_type(typeid(ty));
+		return type_erasure(typeid(ty));
 	}
 
 	template<typename ty>
