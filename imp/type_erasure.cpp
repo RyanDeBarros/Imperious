@@ -6,12 +6,22 @@ namespace imp
 {
 	static std::unordered_map<std::type_index, size_t> type_erasures;
 
-	type_erasure::type_erasure(std::type_index ti)
+	static size_t get_index(std::type_index ti)
 	{
 		auto it = type_erasures.find(ti);
 		if (it != type_erasures.end())
-			_index = it->second;
+			return it->second;
 		else
-			_index = type_erasures.emplace(ti, type_erasures.size() + 1).first->second;
+			return type_erasures.emplace(ti, type_erasures.size() + 1).first->second;
+	}
+	
+	type_erasure::type_erasure()
+		: _index(get_index(typeid(void)))
+	{
+	}
+
+	type_erasure::type_erasure(std::type_index ti)
+		: _index(get_index(ti))
+	{
 	}
 }

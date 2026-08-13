@@ -10,6 +10,7 @@ namespace imp
 		size_t _index;
 
 	public:
+		type_erasure();
 		type_erasure(std::type_index ti);
 	};
 
