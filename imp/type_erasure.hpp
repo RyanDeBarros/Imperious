@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <typeindex>
 
 namespace imp
@@ -12,6 +13,8 @@ namespace imp
 	public:
 		type_erasure();
 		type_erasure(std::type_index ti);
+
+		std::string repr() const;
 
 		bool operator==(const type_erasure&) const = default;
 		bool operator!=(const type_erasure&) const = default;

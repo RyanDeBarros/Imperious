@@ -24,4 +24,9 @@ namespace imp
 		: _index(get_index(ti))
 	{
 	}
+
+	std::string type_erasure::repr() const
+	{
+		return std::to_string(_index);
+	}
 }
