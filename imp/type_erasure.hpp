@@ -12,6 +12,9 @@ namespace imp
 	public:
 		type_erasure();
 		type_erasure(std::type_index ti);
+
+		bool operator==(const type_erasure&) const = default;
+		bool operator!=(const type_erasure&) const = default;
 	};
 
 	template<typename ty>
