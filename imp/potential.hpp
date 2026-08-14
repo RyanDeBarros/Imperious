@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <utility>
 
 namespace imp
 {
@@ -11,7 +12,7 @@ namespace imp
 		ty value;
 
 		constexpr potential()
-			: has_value(false)
+			: has_value(false), value()
 		{
 		}
 
