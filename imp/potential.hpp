@@ -10,12 +10,12 @@ namespace imp
 		bool has_value;
 		ty value;
 
-		constexpr explicit potential()
+		constexpr potential()
 			: has_value(false)
 		{
 		}
 
-		constexpr explicit potential(ty value)
+		constexpr potential(ty value)
 			: has_value(true), value(std::move(value))
 		{
 		}
