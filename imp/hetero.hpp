@@ -1,27 +1,46 @@
 #pragma once
 
+#include <concepts>
 #include <map>
 #include <set>
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace imp::hetero
 {
+    template<typename ty>
+    concept string_like =
+        std::same_as<std::remove_cvref_t<ty>, std::string> ||
+        std::same_as<std::remove_cvref_t<ty>, std::string_view> ||
+        std::same_as<std::remove_cvref_t<ty>, std::span<const char>>;
+
+    constexpr std::string_view to_string_view(std::string_view value) noexcept
+    {
+        return value;
+    }
+
+    constexpr std::string_view to_string_view(const std::string& value) noexcept
+    {
+        return value;
+    }
+
+    constexpr std::string_view to_string_view(std::span<const char> value) noexcept
+    {
+        return { value.data(), value.size() };
+    }
+
 	struct string_hash
 	{
 		using is_transparent = void;
 
-        size_t operator()(std::string_view s) const noexcept
+        template<string_like ty>
+        size_t operator()(const ty& value) const noexcept
         {
-            return std::hash<std::string_view>{}(s);
-        }
-
-        size_t operator()(std::span<const char> s) const noexcept
-        {
-            return (*this)(std::string_view{ s.data(), s.size() });
+            return std::hash<std::string_view>{}(to_string_view(value));
         }
 	};
 
@@ -29,24 +48,10 @@ namespace imp::hetero
 	{
         using is_transparent = void;
 
-        bool operator()(std::string_view lhs, std::string_view rhs) const noexcept
+        template<string_like lty, string_like rty>
+        bool operator()(const lty& lhs, const rty& rhs) const noexcept
         {
-            return lhs == rhs;
-        }
-
-        bool operator()(std::span<const char> lhs, std::string_view rhs) const noexcept
-        {
-            return std::string_view{ lhs.data(), lhs.size() } == rhs;
-        }
-
-        bool operator()(std::string_view lhs, std::span<const char> rhs) const noexcept
-        {
-            return lhs == std::string_view{ rhs.data(), rhs.size() };
-        }
-
-        bool operator()(std::span<const char> lhs, std::span<const char> rhs) const noexcept
-        {
-            return std::string_view{ lhs.data(), lhs.size() } == std::string_view{ rhs.data(), rhs.size() };
+            return to_string_view(lhs) == to_string_view(rhs);
         }
 	};
 
@@ -54,24 +59,10 @@ namespace imp::hetero
     {
         using is_transparent = void;
 
-        bool operator()(std::string_view lhs, std::string_view rhs) const noexcept
+        template<string_like lty, string_like rty>
+        bool operator()(const lty& lhs, const rty& rhs) const noexcept
         {
-            return lhs < rhs;
-        }
-
-        bool operator()(std::span<const char> lhs, std::string_view rhs) const noexcept
-        {
-            return std::string_view{ lhs.data(), lhs.size() } < rhs;
-        }
-
-        bool operator()(std::string_view lhs, std::span<const char> rhs) const noexcept
-        {
-            return lhs < std::string_view{ rhs.data(), rhs.size() };
-        }
-
-        bool operator()(std::span<const char> lhs, std::span<const char> rhs) const noexcept
-        {
-            return std::string_view{ lhs.data(), lhs.size() } < std::string_view{ rhs.data(), rhs.size() };
+            return to_string_view(lhs) < to_string_view(rhs);
         }
     };
 
