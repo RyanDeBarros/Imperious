@@ -37,6 +37,17 @@ namespace imp
 		}
 	};
 
+	struct nullpotential_t
+	{
+		template<typename ty>
+		constexpr operator potential<ty>() const
+		{
+			return potential<ty>();
+		}
+	};
+
+	inline constexpr nullpotential_t nullpotential{};
+
 	template<typename ty>
 	std::ostream& operator<<(std::ostream& os, const potential<ty>& opt)
 	{
