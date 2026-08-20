@@ -46,4 +46,16 @@ namespace imp
 		else
 			return nullptr;
 	}
+
+	template<typename ty>
+	const ty* matches_type(type_erasure erasure, const ty* ptr)
+	{
+		return resolve_type<ty>(erasure, ptr);
+	}
+
+	template<typename ty>
+	ty* matches_type(type_erasure erasure, ty* ptr)
+	{
+		return resolve_type<ty>(erasure, ptr);
+	}
 }
