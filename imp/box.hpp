@@ -2,7 +2,9 @@
 
 #include "imp/type_erasure.hpp"
 
+#include <concepts>
 #include <memory>
+#include <stdexcept>
 
 namespace imp
 {
@@ -17,7 +19,10 @@ namespace imp
 		template<typename ty>
 		void* (*copier())(const void*)
 		{
-			return [](const void* ptr) { return ptr ? static_cast<void*>(new ty(*static_cast<const ty*>(ptr))) : nullptr; };
+			if constexpr (std::is_copy_constructible_v<ty>)
+				return [](const void* ptr) { return ptr ? static_cast<void*>(new ty(*static_cast<const ty*>(ptr))) : nullptr; };
+			else
+				return nullptr;
 		}
 
 		void* _raw = nullptr;
@@ -40,6 +45,8 @@ namespace imp
 		box(const box& o)
 			: _raw(o._copy ? o._copy(o._raw) : nullptr), _type(o._type), _dtor(o._dtor), _copy(o._copy)
 		{
+			if (!_copy && o._raw)
+				throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
 		}
 
 		box(box&& o) noexcept
@@ -68,6 +75,9 @@ namespace imp
 				_type = o._type;
 				_dtor = o._dtor;
 				_copy = o._copy;
+
+				if (!_copy && o._raw)
+					throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
 			}
 
 			return *this;
