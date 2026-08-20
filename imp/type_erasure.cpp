@@ -29,4 +29,14 @@ namespace imp
 	{
 		return std::to_string(_index);
 	}
+
+	bool type_erasure::operator==(std::type_index ti) const
+	{
+		return get_index(ti) == _index;
+	}
+
+	bool type_erasure::operator!=(std::type_index ti) const
+	{
+		return get_index(ti) != _index;
+	}
 }

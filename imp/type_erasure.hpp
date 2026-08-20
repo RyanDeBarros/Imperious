@@ -18,6 +18,9 @@ namespace imp
 
 		bool operator==(const type_erasure&) const = default;
 		bool operator!=(const type_erasure&) const = default;
+
+		bool operator==(std::type_index) const;
+		bool operator!=(std::type_index) const;
 	};
 
 	template<typename ty>
