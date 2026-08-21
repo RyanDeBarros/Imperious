@@ -4,6 +4,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 namespace imp
 {
@@ -28,11 +29,11 @@ namespace imp
 			for (auto it = range.first; it != range.second; ++it)
 			{
 				auto handle = it->second;
-				if (view_equals{}(_data[handle], view))
+				if (view_equals{}(get(handle), view))
 					return handle;
 			}
 
-			handle_type handle = _data.size();
+			handle_type handle = _data.size() + 1;
 
 			if constexpr (std::is_same_v<converter, void>)
 				_data.emplace_back(view);
@@ -45,7 +46,10 @@ namespace imp
 
 		const ty& get(const handle_type handle) const
 		{
-			return _data[handle];
+			if (handle > 0 && handle <= _data.size())
+				return _data[handle - 1];
+			else
+				throw std::logic_error("Invalid handle"); // TODO imp::error ?
 		}
 	};
 }
