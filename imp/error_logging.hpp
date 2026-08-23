@@ -17,7 +17,7 @@ namespace imp
 		}
 	}
 
-	template<typename error, typename... errors, typename func, typename logger>
+	template<typename error, typename... errors, typename func, typename logger> requires (sizeof...(errors) > 0)
 	void handle_error(func&& func_, logger&& logger_)
 	{
 		try
