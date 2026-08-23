@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <stdexcept>
 
 namespace imp
 {
