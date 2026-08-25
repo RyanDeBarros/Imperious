@@ -21,6 +21,8 @@ namespace imp
 
 		instance_guard(const instance_guard&) = delete;
 		instance_guard(instance_guard&&) = delete;
+		instance_guard& operator=(const instance_guard&) = delete;
+		instance_guard& operator=(instance_guard&&) = delete;
 
 		~instance_guard()
 		{

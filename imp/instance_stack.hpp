@@ -19,6 +19,8 @@ namespace imp
 
 		instance_stack(const instance_stack&) = delete;
 		instance_stack(instance_stack&&) = delete;
+		instance_stack& operator=(const instance_stack&) = delete;
+		instance_stack& operator=(instance_stack&&) = delete;
 
 		~instance_stack()
 		{
