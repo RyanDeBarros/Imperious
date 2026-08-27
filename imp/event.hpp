@@ -21,30 +21,34 @@ namespace imp
 		template<typename... args>
 		event_listener(event<args...>* event_, size_t h) : _event(event_), _h(h)
 		{
-			_resubscribe = [](event_listener& from, event_listener* to) {
+			_resubscribe = &resubscribe<args...>;
+		}
+
+		template<typename... args>
+		static void resubscribe(event_listener& from, event_listener* to)
+		{
+			if (to)
+			{
+				to->_event = from._event;
+				to->_h = from._h;
+				to->_resubscribe = from._resubscribe;
+			}
+
+			if (auto e = static_cast<event<args...>*>(from._event))
+			{
 				if (to)
 				{
-					to->_event = from._event;
-					to->_h = from._h;
-					to->_resubscribe = from._resubscribe;
-				}
+					auto it = e->_listeners.find(from._h);
+					if (it != e->_listeners.end())
+						it->second.event_listener_ = to;
 
-				if (auto e = static_cast<event<args...>*>(from._event))
-				{
-					if (to)
-					{
-						auto it = e->_listeners.find(from._h);
-						if (it != e->_listeners.end())
-							it->second.event_listener_ = to;
-
-						from._event = nullptr;
-						from._h = 0;
-						from._resubscribe = nullptr;
-					}
-					else
-						e->unsubscribe(from);
+					from._event = nullptr;
+					from._h = 0;
+					from._resubscribe = nullptr;
 				}
-			};
+				else
+					e->unsubscribe(from);
+			}
 		}
 
 	public:
@@ -81,6 +85,8 @@ namespace imp
 	template<typename... args>
 	class event
 	{
+		friend class event_listener;
+
 	public:
 		using callback = std::function<void(args...)>;
 
