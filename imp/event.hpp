@@ -121,7 +121,7 @@ namespace imp
 			}
 
 			event_listener event_listener(this, h);
-			_listeners.emplace(h, listener(&event_listener, std::move(callback)));
+			_listeners.emplace(h, internal_listener(&event_listener, std::move(callback)));
 			return event_listener;
 		}
 
