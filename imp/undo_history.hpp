@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include <imp/functional_event.hpp>
+#include <imp/event.hpp>
 #include <imp/instance_stack.hpp>
 
 namespace imp
@@ -70,7 +70,7 @@ namespace imp
 		std::optional<size_t> _clean_marker;
 
 	public:
-		imp::functional_event<> on_potential_clean;
+		imp::event<> on_potential_clean;
 
 		using undo_history::undo_history;
 
