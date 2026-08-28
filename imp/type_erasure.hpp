@@ -21,6 +21,8 @@ namespace imp
 
 		bool operator==(std::type_index) const;
 		bool operator!=(std::type_index) const;
+
+		size_t hash() const;
 	};
 
 	template<typename ty>
@@ -59,3 +61,9 @@ namespace imp
 		return resolve_type<ty>(erasure, ptr);
 	}
 }
+
+template<>
+struct std::hash<imp::type_erasure>
+{
+	size_t operator()(imp::type_erasure) const;
+};

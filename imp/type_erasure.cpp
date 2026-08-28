@@ -39,4 +39,14 @@ namespace imp
 	{
 		return get_index(ti) != _index;
 	}
+
+	size_t type_erasure::hash() const
+	{
+		return _index;
+	}
+}
+
+size_t std::hash<imp::type_erasure>::operator()(imp::type_erasure te) const
+{
+	return te.hash();
 }
