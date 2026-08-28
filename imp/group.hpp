@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <concepts>
 #include <span>
 #include <stdexcept>
 
@@ -9,7 +10,7 @@ namespace imp
 	template<typename ty>
 	class group
 	{
-		template<typename ty2>
+		template<typename _>
 		friend class group;
 
 		ty* _data = nullptr;
@@ -21,13 +22,20 @@ namespace imp
 		{
 		}
 
-		group(std::span<ty> span)
+		template<typename other_ty> requires std::convertible_to<other_ty*, ty*>
+		group(std::span<other_ty> span)
 			: _data(span.data()), _count(span.size())
 		{
 		}
-
-		template<size_t n>
-		group(const std::array<ty, n>& array)
+		
+		template<typename other_ty, size_t n> requires std::convertible_to<other_ty*, ty*>
+		group(std::array<other_ty, n>& array)
+			: _data(array.data()), _count(n)
+		{
+		}
+		
+		template<typename other_ty, size_t n> requires std::convertible_to<const other_ty*, ty*>
+		group(const std::array<other_ty, n>& array)
 			: _data(array.data()), _count(n)
 		{
 		}
