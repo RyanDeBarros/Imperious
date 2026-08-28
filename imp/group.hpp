@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <span>
 #include <stdexcept>
 
@@ -22,6 +23,12 @@ namespace imp
 
 		group(std::span<ty> span)
 			: _data(span.data()), _count(span.size())
+		{
+		}
+
+		template<size_t n>
+		group(const std::array<ty, n>& array)
+			: _data(array.data()), _count(n)
 		{
 		}
 
