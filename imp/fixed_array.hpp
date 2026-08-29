@@ -1,8 +1,6 @@
 #pragma once
 
-#include "imp/dynamic_array.h"
-
-#include <string>
+#include "imp/dynamic_array.hpp"
 
 namespace imp
 {

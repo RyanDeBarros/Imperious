@@ -2,6 +2,7 @@
 
 #include <span>
 #include <stdexcept>
+#include <string>
 
 namespace imp
 {
