@@ -35,3 +35,13 @@
 	friend enum_ty& operator|=(enum_ty&, enum_ty); \
 	friend enum_ty& operator&=(enum_ty&, enum_ty); \
 	friend enum_ty& operator^=(enum_ty&, enum_ty);
+
+namespace imp
+{
+	template<typename enum_ty>
+	inline bool has_flag(enum_ty bitmask, enum_ty flag)
+	{
+		using sub_ty = std::underlying_type_t<enum_ty>;
+		return static_cast<sub_ty>(bitmask & flag) != static_cast<sub_ty>(0);
+	}
+}
