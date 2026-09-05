@@ -15,7 +15,7 @@ namespace imp
 
 		modifiable(const modifiable& o)
 		{
-			Set(o._obj);
+			set(o._obj);
 		}
 
 		modifiable(modifiable&& o) noexcept
