@@ -7,7 +7,7 @@ namespace imp
 	template<typename derived>
 	class instance_tracker
 	{
-		std::unordered_set<derived*> _instances;
+		inline static std::unordered_set<derived*> _instances = {};
 
 	public:
 		instance_tracker()
