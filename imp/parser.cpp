@@ -44,4 +44,22 @@ namespace imp
         else // size == 1
             return static_cast<int>(str.front());
     }
+
+    size_t cdpt_hash::operator()(const std::string_view value) const noexcept
+    {
+        if (auto v = stocdpt(value))
+            return std::hash<int>{}(*v);
+        else
+            return 0;
+    }
+
+    bool cdpt_equal::operator()(const std::string_view lhs, const std::string_view rhs) const noexcept
+    {
+        return stocdpt(lhs) == stocdpt(rhs);
+    }
+
+    bool cdpt_less::operator()(const std::string_view lhs, const std::string_view rhs) const noexcept
+    {
+        return stocdpt(lhs) <= stocdpt(rhs);
+    }
 }

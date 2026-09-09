@@ -55,7 +55,7 @@ namespace imp::hetero
         }
 	};
 
-    struct string_compare
+    struct string_less
     {
         using is_transparent = void;
 
@@ -70,9 +70,9 @@ namespace imp::hetero
 	using string_umap = std::unordered_map<std::string, value, string_hash, string_equal>;
 	
 	template<typename value>
-	using string_map = std::map<std::string, value, string_compare>;
+	using string_map = std::map<std::string, value, string_less>;
 
 	using string_uset = std::unordered_set<std::string, string_hash, string_equal>;
 
-	using string_set = std::set<std::string, string_compare>;
+	using string_set = std::set<std::string, string_less>;
 }

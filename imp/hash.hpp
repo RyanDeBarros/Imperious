@@ -33,7 +33,7 @@ namespace imp
 	struct stl_hash
 	{
 		template<typename ty, size_t n>
-		size_t operator()(const std::array<ty, n>& a) const
+		size_t operator()(const std::array<ty, n>& a) const noexcept
 		{
 			hasher h;
 			for (size_t i = 0; i < n; ++i)
