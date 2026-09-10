@@ -52,13 +52,13 @@ namespace imp
 	template<typename ty>
 	const ty* resolve_type(type_erasure erasure, const ty* ptr)
 	{
-		return resolve_type<ty>(erasure, ptr);
+		return resolve_type<ty>(erasure, static_cast<const void*>(ptr));
 	}
 
 	template<typename ty>
 	ty* resolve_type(type_erasure erasure, ty* ptr)
 	{
-		return resolve_type<ty>(erasure, ptr);
+		return resolve_type<ty>(erasure, static_cast<void*>(ptr));
 	}
 }
 
