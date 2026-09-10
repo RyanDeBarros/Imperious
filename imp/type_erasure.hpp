@@ -32,15 +32,6 @@ namespace imp
 	}
 
 	template<typename ty>
-	ty* resolve_type(type_erasure erasure, void* ptr)
-	{
-		if (erase_type<ty>() == erasure)
-			return static_cast<ty*>(ptr);
-		else
-			return nullptr;
-	}
-
-	template<typename ty>
 	const ty* resolve_type(type_erasure erasure, const void* ptr)
 	{
 		if (erase_type<ty>() == erasure)
@@ -50,13 +41,22 @@ namespace imp
 	}
 
 	template<typename ty>
-	const ty* matches_type(type_erasure erasure, const ty* ptr)
+	ty* resolve_type(type_erasure erasure, void* ptr)
+	{
+		if (erase_type<ty>() == erasure)
+			return static_cast<ty*>(ptr);
+		else
+			return nullptr;
+	}
+
+	template<typename ty>
+	const ty* resolve_type(type_erasure erasure, const ty* ptr)
 	{
 		return resolve_type<ty>(erasure, ptr);
 	}
 
 	template<typename ty>
-	ty* matches_type(type_erasure erasure, ty* ptr)
+	ty* resolve_type(type_erasure erasure, ty* ptr)
 	{
 		return resolve_type<ty>(erasure, ptr);
 	}

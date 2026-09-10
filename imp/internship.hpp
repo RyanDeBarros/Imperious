@@ -14,6 +14,7 @@ namespace imp
 		std::vector<ty> _data;
 
 	public:
+		// TODO make this a soft_internship? then raii handles that auto de-intern
 		using handle_type = size_t;
 
 	private:
