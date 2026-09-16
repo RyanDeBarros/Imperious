@@ -63,22 +63,25 @@ namespace imp
 
 		~event_listener()
 		{
-			if (_resubscribe)
-				_resubscribe(*this, nullptr);
+			detach();
 		}
 
 		event_listener& operator=(event_listener&& o) noexcept
 		{
 			if (this != &o)
 			{
-				if (_resubscribe)
-					_resubscribe(*this, nullptr);
-
+				detach();
 				if (o._resubscribe)
 					o._resubscribe(o, this);
 			}
 
 			return *this;
+		}
+
+		void detach()
+		{
+			if (_resubscribe)
+				_resubscribe(*this, nullptr);
 		}
 	};
 
