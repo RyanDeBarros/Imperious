@@ -75,3 +75,12 @@ namespace imp
 		}
 	};
 }
+
+template<typename ty>
+struct std::hash<imp::internship<ty>::handle>
+{
+	size_t operator()(const imp::internship<ty>::handle handle) const
+	{
+		return handle.id;
+	}
+};
