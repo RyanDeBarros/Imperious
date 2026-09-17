@@ -23,6 +23,11 @@ namespace imp
 
 			bool operator==(const handle&) const = default;
 			bool operator!=(const handle&) const = default;
+
+			bool valid() const
+			{
+				return id > 0;
+			}
 		};
 
 	private:
