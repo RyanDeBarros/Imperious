@@ -19,11 +19,11 @@ namespace imp
 			size_t id = 0;
 
 			handle() = default;
-			explicit handle_handletype(size_t id) : id(id) {}
+			explicit handle(size_t id) : id(id) {}
 		};
 
 	private:
-		std::unordered_multimap<size_t, handle_type> _lut;
+		std::unordered_multimap<size_t, handle> _lut;
 
 	public:
 		template<typename view_ty, typename view_hash = std::hash<view_ty>, typename view_equals = std::equal_to<view_ty>, typename converter = void>
@@ -39,7 +39,7 @@ namespace imp
 					return handle_;
 			}
 
-			handle handle_ = handle_type(_data.size() + 1);
+			handle handle_ = handle(_data.size() + 1);
 
 			if constexpr (std::is_same_v<converter, void>)
 				_data.emplace_back(view);
