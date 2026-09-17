@@ -63,8 +63,8 @@ namespace imp
 
 		const ty* try_get(const handle handle_) const
 		{
-			if (handle_ > 0 && handle_ <= _data.size())
-				return _data.data() + handle_ - 1;
+			if (handle_.id > 0 && handle_.id <= _data.size())
+				return _data.data() + handle_.id - 1;
 			else
 				return nullptr;
 		}
