@@ -77,9 +77,9 @@ namespace imp
 }
 
 template<typename ty>
-struct std::hash<imp::internship<ty>::handle>
+struct std::hash<typename imp::internship<ty>::handle>
 {
-	size_t operator()(const imp::internship<ty>::handle handle) const
+	size_t operator()(const typename imp::internship<ty>::handle& handle) const
 	{
 		return handle.id;
 	}
