@@ -9,26 +9,29 @@
 namespace imp
 {
 	template<typename ty>
+	struct internship_handle
+	{
+		size_t id = 0;
+
+		internship_handle() = default;
+		explicit internship_handle(size_t id) : id(id) {}
+
+		bool operator==(const internship_handle&) const = default;
+		bool operator!=(const internship_handle&) const = default;
+
+		bool valid() const
+		{
+			return id > 0;
+		}
+	};
+
+	template<typename ty>
 	class internship
 	{
 		std::vector<ty> _data;
 
 	public:
-		struct handle
-		{
-			size_t id = 0;
-
-			handle() = default;
-			explicit handle(size_t id) : id(id) {}
-
-			bool operator==(const handle&) const = default;
-			bool operator!=(const handle&) const = default;
-
-			bool valid() const
-			{
-				return id > 0;
-			}
-		};
+		using handle = internship_handle<ty>;
 
 	private:
 		std::unordered_multimap<size_t, handle> _lut;
@@ -77,9 +80,9 @@ namespace imp
 }
 
 template<typename ty>
-struct std::hash<typename imp::internship<ty>::handle>
+struct std::hash<imp::internship_handle<ty>>
 {
-	size_t operator()(const typename imp::internship<ty>::handle& handle) const
+	size_t operator()(const imp::internship_handle<ty>& handle) const
 	{
 		return handle.id;
 	}
