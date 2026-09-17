@@ -47,10 +47,18 @@ namespace imp
 
 		const ty& get(const handle_type handle) const
 		{
-			if (handle > 0 && handle <= _data.size())
-				return _data[handle - 1];
+			if (auto ptr = try_get(handle))
+				return *ptr;
 			else
 				throw std::logic_error("Invalid handle"); // TODO imp::error ?
+		}
+
+		const ty* try_get(const handle_type handle) const
+		{
+			if (handle > 0 && handle <= _data.size())
+				return _data.data() + handle - 1;
+			else
+				return nullptr;
 		}
 	};
 }
