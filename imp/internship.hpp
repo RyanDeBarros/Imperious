@@ -20,6 +20,9 @@ namespace imp
 
 			handle() = default;
 			explicit handle(size_t id) : id(id) {}
+
+			bool operator==(const handle&) const = default;
+			bool operator!=(const handle&) const = default;
 		};
 
 	private:
