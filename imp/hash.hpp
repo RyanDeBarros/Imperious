@@ -13,13 +13,13 @@ namespace imp
 		template<typename ty>
 		hasher& with(const ty& o)
 		{
-			return with<std::hash<ty>>(o);
+			return with_hash<std::hash<ty>>(o);
 		}
 
-		template<typename Hash, typename ty>
-		hasher& with(const ty& o)
+		template<typename hash, typename ty>
+		hasher& with_hash(const ty& o)
 		{
-			hash_combine(h, Hash{}(o));
+			hash_combine(h, hash{}(o));
 			return *this;
 		}
 
@@ -37,14 +37,14 @@ namespace imp
 		{
 			hasher h;
 			for (size_t i = 0; i < n; ++i)
-				h.with<hash>(a[i]);
+				h.with_hash<hash>(a[i]);
 			return h;
 		}
 
         template<typename ty>
         size_t operator()(const std::pair<ty, ty>& p) const noexcept
         {
-            return hasher().with<hash>(p.first).with<hash>(p.second);
+            return hasher().with_hash<hash>(p.first).with_hash<hash>(p.second);
         }
 	};
 }
