@@ -3,4 +3,5 @@ target_sources(imperious PRIVATE
 	type_erasure.cpp
 	undo_history.cpp
 	parser.cpp
+    utf.cpp
 )
