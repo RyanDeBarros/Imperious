@@ -23,13 +23,13 @@ namespace imp
 			return *this;
 		}
 
-		operator size_t () const
+		operator size_t() const
 		{
 			return h;
 		}
 	};
 
-	template<typename hash>
+	template<typename hash = void>
 	struct stl_hash
 	{
 		template<typename ty, size_t n>
@@ -47,4 +47,23 @@ namespace imp
             return hasher().with_hash<hash>(p.first).with_hash<hash>(p.second);
         }
 	};
+
+    template<>
+    struct stl_hash<void>
+    {
+        template<typename ty, size_t n>
+        size_t operator()(const std::array<ty, n>& a) const noexcept
+        {
+            hasher h;
+            for (size_t i = 0; i < n; ++i)
+                h.with(a[i]);
+            return h;
+        }
+
+        template<typename ty>
+        size_t operator()(const std::pair<ty, ty>& p) const noexcept
+        {
+            return hasher().with(p.first).with(p.second);
+        }
+    };
 }
