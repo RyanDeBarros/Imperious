@@ -40,5 +40,11 @@ namespace imp
 				h.with<hash>(a[i]);
 			return h;
 		}
+
+        template<typename ty>
+        size_t operator()(const std::pair<ty, ty>& p) const noexcept
+        {
+            return hasher().with<hash>(p.first).with<hash>(p.second);
+        }
 	};
 }
