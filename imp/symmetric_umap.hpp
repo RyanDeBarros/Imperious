@@ -51,10 +51,11 @@ namespace imp
             _lut.clear();
         }
 
-        template<typename kty> requires (std::convertible_to<kty, half_key_ty>)
-            std::optional<value_ty> get(kty&& k1, kty&& k2) const
+        template<typename kty1, typename kty2>
+            requires (std::convertible_to<kty1, half_key_ty> && std::convertible_to<kty2, half_key_ty>)
+        std::optional<value_ty> get(kty1&& k1, kty2&& k2) const
         {
-            return get(pair{ std::forward<kty>(k1), std::forward<kty>(k2) });
+            return get(pair{ std::forward<kty1>(k1), std::forward<kty2>(k2) });
         }
 
         std::optional<value_ty> get(const pair& key) const
@@ -66,15 +67,15 @@ namespace imp
                 return std::nullopt;
         }
 
-        template<typename kty, typename vty>
-            requires (std::convertible_to<kty, half_key_ty>&& std::convertible_to<vty, value_ty>)
-        value_ty get_or(kty&& k1, kty&& k2, vty&& default_value)
+        template<typename kty1, typename kty2, typename vty>
+            requires (std::convertible_to<kty1, half_key_ty> && std::convertible_to<kty2, half_key_ty> && std::convertible_to<vty, value_ty>)
+        value_ty get_or(kty1&& k1, kty2&& k2, vty&& default_value)
         {
-            return get_or(pair{ std::forward<kty>(k1), std::forward<kty>(k2) }, std::forward<vty>(default_value));
+            return get_or(pair{ std::forward<kty1>(k1), std::forward<kty2>(k2) }, std::forward<vty>(default_value));
         }
 
         template<typename pty, typename vty>
-            requires (std::convertible_to<pty, pair>&& std::convertible_to<vty, value_ty>)
+            requires (std::convertible_to<pty, pair> && std::convertible_to<vty, value_ty>)
         value_ty get_or(pty&& key, vty&& default_value)
         {
             auto it = _map.find(key);
@@ -87,11 +88,11 @@ namespace imp
             }
         }
 
-        template<typename kty, typename vty>
-            requires (std::convertible_to<kty, half_key_ty>&& std::convertible_to<vty, value_ty>)
-        void set(kty&& k1, kty&& k2, vty&& value)
+        template<typename kty1, typename kty2, typename vty>
+            requires (std::convertible_to<kty1, half_key_ty> && std::convertible_to<kty2, half_key_ty>&& std::convertible_to<vty, value_ty>)
+        void set(kty1&& k1, kty2&& k2, vty&& value)
         {
-            set(pair{ std::forward<kty>(k1), std::forward<kty>(k2) }, std::forward<vty>(value));
+            set(pair{ std::forward<kty1>(k1), std::forward<kty2>(k2) }, std::forward<vty>(value));
         }
 
         template<typename pty, typename vty>
