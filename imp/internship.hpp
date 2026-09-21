@@ -40,7 +40,7 @@ namespace imp
 		template<typename view_ty, typename view_hash = std::hash<view_ty>, typename view_equals = std::equal_to<view_ty>, typename converter = void>
 		handle intern(const view_ty& view)
 		{
-			size_t hash = hasher().with<view_hash>(view);
+			size_t hash = hasher().with_hash<view_hash>(view);
 			auto range = _lut.equal_range(hash);
 
 			for (auto it = range.first; it != range.second; ++it)
