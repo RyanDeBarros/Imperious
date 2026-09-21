@@ -1,0 +1,6 @@
+#pragma once
+
+#define _IMP_REMOVE_PARENS_IMPL(...) __VA_ARGS__
+#define _IMP_REMOVE_PARENS(X) _IMP_REMOVE_PARENS_IMPL X
+#define _IMP_CONCAT(...) __VA_ARGS__
+#define IMP_FLATTEN(...) _IMP_REMOVE_PARENS((_IMP_CONCAT(__VA_ARGS__)))
