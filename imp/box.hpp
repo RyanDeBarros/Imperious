@@ -236,4 +236,10 @@ namespace imp
         else
             b = make_box<ty>(std::forward<args>(args_)...);
     }
+
+    template<typename ty>
+    box forward_to_box(ty&& obj)
+    {
+        return make_box<ty>(std::forward<ty>(obj));
+    }
 }
