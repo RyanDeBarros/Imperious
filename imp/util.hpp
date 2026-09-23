@@ -62,17 +62,11 @@ namespace imp
         static_assert(sizeof...(args) > 0, "At least one argument required for imp::min_of");
         return internal::min_of_impl(std::tie(args_...), std::make_index_sequence<sizeof...(args)>{});
     }
-
+    
     template<typename ty>
-    inline ty dupl(const ty& obj)
+    inline std::decay_t<ty> dupl(ty&& obj)
     {
-        return obj;
-    }
-
-    template<typename ty>
-    inline ty dupl(ty&& obj)
-    {
-        return std::move(obj);
+        return std::forward<ty>(obj);
     }
 
     template<typename struct_ty, typename member_ty>
