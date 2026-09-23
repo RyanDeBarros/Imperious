@@ -1,35 +1,66 @@
 #pragma once
 
 #include <string>
-#include <typeindex>
+#include <string_view>
 
 namespace imp
 {
-	struct type_erasure
-	{
-	private:
-		size_t _index;
+    namespace internal
+    {
+        constexpr std::uint64_t fnv1a_hash(std::string_view str)
+        {
+            std::uint64_t hash = 0xcbf29ce484222325ULL;
+            for (char c : str)
+            {
+                hash ^= static_cast<std::uint64_t>(c);
+                hash *= 0x00000100000001B3ULL;
+            }
+            return hash;
+        }
 
-	public:
-		type_erasure();
-		type_erasure(std::type_index ti);
+    }
 
-		std::string repr() const;
+    template<typename ty>
+    constexpr std::string_view compiler_type_name()
+    {
+#if defined(_MSC_VER)
+        return __FUNCSIG__;
+#else
+        return __PRETTY_FUNCTION__;
+#endif
+    }
 
-		bool operator==(const type_erasure&) const = default;
-		bool operator!=(const type_erasure&) const = default;
+    template<typename ty>
+    constexpr std::uint64_t type_id()
+    {
+        return internal::fnv1a_hash(compiler_type_name<ty>());
+    }
 
-		bool operator==(std::type_index) const;
-		bool operator!=(std::type_index) const;
+    struct type_erasure
+    {
+    private:
+        std::uint64_t _index;
 
-		size_t hash() const;
-	};
+    public:
+        template<typename ty>
+        type_erasure()
+            : _index(type_id<ty>())
+        {
+        }
 
-	template<typename ty>
-	type_erasure erase_type()
-	{
-		return type_erasure(typeid(ty));
-	}
+        std::string repr() const
+        {
+            return std::to_string(_index);
+        }
+
+        bool operator==(const type_erasure&) const = default;
+        bool operator!=(const type_erasure&) const = default;
+
+        size_t hash() const
+        {
+            return static_cast<size_t>(_index);
+        }
+    };
 
 	template<typename ty>
 	const ty* resolve_type(type_erasure erasure, const void* ptr)
@@ -65,5 +96,8 @@ namespace imp
 template<>
 struct std::hash<imp::type_erasure>
 {
-	size_t operator()(imp::type_erasure) const;
+    size_t operator()(imp::type_erasure te) const
+    {
+        return te.hash();
+    }
 };
