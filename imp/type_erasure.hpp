@@ -78,6 +78,12 @@ namespace imp
         return type_erasure(type_id<ty>());
     }
 
+    template<typename ty, typename uy>
+    constexpr bool erases_to() noexcept
+    {
+        return erase_type<ty>() == erase_type<uy>();
+    }
+
 	template<typename ty>
     constexpr const ty* resolve_type(type_erasure erasure, const void* ptr) noexcept
 	{
