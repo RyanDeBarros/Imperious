@@ -190,6 +190,16 @@ namespace imp
             return _type;
         }
 
+        const void* unsafe_raw() const
+        {
+            return _raw;
+        }
+
+        void* unsafe_raw()
+        {
+            return _raw;
+        }
+
 		template<typename ty>
 		const ty* as() const
 		{
