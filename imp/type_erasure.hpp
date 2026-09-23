@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <string_view>
 
@@ -7,21 +9,20 @@ namespace imp
 {
     namespace internal
     {
-        constexpr std::uint64_t fnv1a_hash(std::string_view str)
+        constexpr std::uint64_t fnv1a_hash(std::string_view str) noexcept
         {
             std::uint64_t hash = 0xcbf29ce484222325ULL;
             for (char c : str)
             {
-                hash ^= static_cast<std::uint64_t>(c);
+                hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(c));
                 hash *= 0x00000100000001B3ULL;
             }
             return hash;
         }
-
     }
 
     template<typename ty>
-    constexpr std::string_view compiler_type_name()
+    constexpr std::string_view compiler_type_name() noexcept
     {
 #if defined(_MSC_VER)
         return __FUNCSIG__;
@@ -31,7 +32,7 @@ namespace imp
     }
 
     template<typename ty>
-    constexpr std::uint64_t type_id()
+    constexpr std::uint64_t type_id() noexcept
     {
         return internal::fnv1a_hash(compiler_type_name<ty>());
     }
@@ -39,55 +40,64 @@ namespace imp
     struct type_erasure
     {
     private:
-        std::uint64_t _index;
+        std::uint64_t _id;
+
+        template<typename ty>
+        friend constexpr type_erasure erase_type() noexcept;
+
+        explicit type_erasure(std::uint64_t id) noexcept
+            : _id(id)
+        {
+        }
 
     public:
-        template<typename ty>
-        type_erasure()
-            : _index(type_id<ty>())
+        constexpr type_erasure() noexcept
+            : _id(type_id<void>())
         {
         }
 
+        constexpr bool operator==(const type_erasure&) const noexcept = default;
+        constexpr bool operator!=(const type_erasure&) const noexcept = default;
+
+        [[nodiscard]]
+        constexpr size_t hash() const noexcept
+        {
+            return static_cast<size_t>(_id);
+        }
+
+        [[nodiscard]]
         std::string repr() const
         {
-            return std::to_string(_index);
-        }
-
-        bool operator==(const type_erasure&) const = default;
-        bool operator!=(const type_erasure&) const = default;
-
-        size_t hash() const
-        {
-            return static_cast<size_t>(_index);
+            return std::to_string(_id);
         }
     };
 
+    template<typename ty>
+    constexpr type_erasure erase_type() noexcept
+    {
+        return type_erasure(type_id<ty>());
+    }
+
 	template<typename ty>
-	const ty* resolve_type(type_erasure erasure, const void* ptr)
+    constexpr const ty* resolve_type(type_erasure erasure, const void* ptr) noexcept
 	{
-		if (erase_type<ty>() == erasure)
-			return static_cast<const ty*>(ptr);
-		else
-			return nullptr;
+		return erase_type<ty>() == erasure ? static_cast<const ty*>(ptr) : nullptr;
 	}
 
 	template<typename ty>
-	ty* resolve_type(type_erasure erasure, void* ptr)
+    constexpr ty* resolve_type(type_erasure erasure, void* ptr) noexcept
 	{
-		if (erase_type<ty>() == erasure)
-			return static_cast<ty*>(ptr);
-		else
-			return nullptr;
+		return erase_type<ty>() == erasure ? static_cast<ty*>(ptr) : nullptr;
 	}
 
 	template<typename ty>
-	const ty* resolve_type(type_erasure erasure, const ty* ptr)
+    constexpr const ty* resolve_type(type_erasure erasure, const ty* ptr) noexcept
 	{
 		return resolve_type<ty>(erasure, static_cast<const void*>(ptr));
 	}
 
 	template<typename ty>
-	ty* resolve_type(type_erasure erasure, ty* ptr)
+	constexpr ty* resolve_type(type_erasure erasure, ty* ptr) noexcept
 	{
 		return resolve_type<ty>(erasure, static_cast<void*>(ptr));
 	}
