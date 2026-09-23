@@ -240,12 +240,12 @@ namespace imp
     template<typename ty>
     box forward_to_box(ty&& obj)
     {
-        return make_box<ty>(std::forward<ty>(obj));
+        return make_box<std::remove_cvref_t<ty>>(std::forward<ty>(obj));
     }
 
     template<typename ty>
     void forward_into_box(box& b, ty&& obj)
     {
-        copy_box<ty>(b, std::forward<ty>(obj));
+        copy_box<std::remove_cvref_t<ty>>(b, std::forward<ty>(obj));
     }
 }
