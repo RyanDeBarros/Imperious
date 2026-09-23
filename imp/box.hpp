@@ -26,19 +26,19 @@ namespace imp
 		}
 
 		void* _raw = nullptr;
-		std::type_index _type;
+        type_erasure _type;
 		void(*_dtor)(void*);
 		void* (*_copy)(const void*);
 
 	public:
 		box()
-			: _raw(nullptr), _type(typeid(void)), _dtor(nullptr), _copy(nullptr)
+			: _raw(nullptr), _type(), _dtor(nullptr), _copy(nullptr)
 		{
 		}
 
 		template<typename ty>
 		box(ty* raw)
-			: _raw(raw), _type(typeid(ty)), _dtor(deleter<ty>()), _copy(copier<ty>())
+			: _raw(raw), _type(erase_type<ty>()), _dtor(deleter<ty>()), _copy(copier<ty>())
 		{
 		}
 
@@ -49,11 +49,11 @@ namespace imp
 				throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
 		}
 
-		box(box&& o) noexcept
-			: _raw(o._raw), _type(o._type), _dtor(o._dtor), _copy(o._copy)
-		{
-			o._raw = nullptr;
-			o._type = typeid(void);
+        box(box&& o) noexcept
+            : _raw(o._raw), _type(o._type), _dtor(o._dtor), _copy(o._copy)
+        {
+            o._raw = nullptr;
+            o._type = type_erasure();
 			o._dtor = nullptr;
 			o._copy = nullptr;
 		}
@@ -96,7 +96,7 @@ namespace imp
 				_copy = o._copy;
 
 				o._raw = nullptr;
-				o._type = typeid(void);
+				o._type = type_erasure();
 				o._dtor = nullptr;
 				o._copy = nullptr;
 			}
@@ -107,17 +107,12 @@ namespace imp
 		template<typename ty>
 		bool holds() const
 		{
-			return _type == typeid(ty);
-		}
-
-		bool holds(std::type_index ti) const
-		{
-			return _type == ti;
+			return _type == erase_type<ty>();
 		}
 
 		bool holds(type_erasure type) const
 		{
-			return type == _type;
+			return _type == type;
 		}
 
 		template<typename ty>
