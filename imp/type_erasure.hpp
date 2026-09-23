@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
+#include <type_traits>
 
 namespace imp
 {
@@ -33,7 +34,7 @@ namespace imp
     template<typename ty>
     constexpr std::uint64_t type_id() noexcept
     {
-        return internal::fnv1a_hash(compiler_type_name<ty>());
+        return internal::fnv1a_hash(compiler_type_name<std::remove_cvref_t<ty>>());
     }
 
     struct type_erasure
