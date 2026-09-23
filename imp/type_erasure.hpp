@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string>
 #include <string_view>
 
 namespace imp
@@ -40,19 +39,19 @@ namespace imp
     struct type_erasure
     {
     private:
-        std::uint64_t _id;
+        std::uint64_t _uid;
 
         template<typename ty>
         friend constexpr type_erasure erase_type() noexcept;
 
-        explicit type_erasure(std::uint64_t id) noexcept
-            : _id(id)
+        explicit type_erasure(std::uint64_t uid) noexcept
+            : _uid(uid)
         {
         }
 
     public:
         constexpr type_erasure() noexcept
-            : _id(type_id<void>())
+            : _uid(type_id<void>())
         {
         }
 
@@ -62,13 +61,13 @@ namespace imp
         [[nodiscard]]
         constexpr size_t hash() const noexcept
         {
-            return static_cast<size_t>(_id);
+            return static_cast<size_t>(_uid);
         }
 
         [[nodiscard]]
-        std::string repr() const
+        std::uint64_t uid() const
         {
-            return std::to_string(_id);
+            return _uid;
         }
     };
 
