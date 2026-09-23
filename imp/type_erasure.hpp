@@ -44,7 +44,7 @@ namespace imp
         template<typename ty>
         friend constexpr type_erasure erase_type() noexcept;
 
-        explicit type_erasure(std::uint64_t uid) noexcept
+        constexpr explicit type_erasure(std::uint64_t uid) noexcept
             : _uid(uid)
         {
         }
@@ -65,7 +65,7 @@ namespace imp
         }
 
         [[nodiscard]]
-        std::uint64_t uid() const
+        constexpr std::uint64_t uid() const
         {
             return _uid;
         }
