@@ -115,6 +115,11 @@ namespace imp
 			return _type == type;
 		}
 
+        type_erasure type() const
+        {
+            return _type;
+        }
+
 		template<typename ty>
 		const ty* as() const
 		{
