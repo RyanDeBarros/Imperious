@@ -48,7 +48,7 @@ namespace imp
             {
                 if constexpr (std::is_move_assignable_v<ty>)
                 {
-                    *static_cast<ty*>(to) = std::move(*static_cast<const ty*>(from));
+                    *static_cast<ty*>(to) = std::move(*static_cast<ty*>(from));
                     return true;
                 }
                 else
