@@ -12,8 +12,8 @@ namespace imp
 	{
         using dtor_ty = void (*)(void*);
         using copy_ty = void* (*)(const void*);
-        using copy_assign_ty = void(*)(void*, const void*);
-        using move_assign_ty = void(*)(void*, void*);
+        using copy_assign_ty = bool(*)(void*, const void*);
+        using move_assign_ty = bool(*)(void*, void*);
 
         struct ops
         {
@@ -34,71 +34,63 @@ namespace imp
                 else
                     return nullptr;
             },
-            [](void* to, const void* from) { *static_cast<ty*>(to) = *static_cast<const ty*>(from); },
-            [](void* to, void* from) { *static_cast<ty*>(to) = std::move(*static_cast<const ty*>(from)); }
+            [](void* to, const void* from)
+            {
+                if constexpr (std::is_copy_assignable_v<ty>)
+                {
+                    *static_cast<ty*>(to) = *static_cast<const ty*>(from);
+                    return true;
+                }
+                else
+                    return false;
+            },
+            [](void* to, void* from)
+            {
+                if constexpr (std::is_move_assignable_v<ty>)
+                {
+                    *static_cast<ty*>(to) = std::move(*static_cast<const ty*>(from));
+                    return true;
+                }
+                else
+                    return false;
+            }
         };
 
 		void* _raw = nullptr;
         type_erasure _type;
         const ops* _ops = nullptr;
 
-        dtor_ty dtor() const
-        {
-            return _ops ? _ops->dtor : nullptr;
-        }
-
         void try_dtor(void* ptr) const
         {
-            if (auto d = dtor())
-                d(ptr);
-        }
-
-        copy_ty copy() const
-        {
-            return _ops ? _ops->copy : nullptr;
+            if (_ops)
+                _ops->dtor(ptr);
         }
 
         void* try_copy(const void* ptr) const
         {
-            if (auto c = copy())
-                return c(ptr);
+            if (_ops)
+                return _ops->copy(ptr);
             else
                 return nullptr;
-        }
-
-        copy_assign_ty copy_assign() const
-        {
-            return _ops ? _ops->copy_assign : nullptr;
         }
 
         bool try_copy_assign(void* to, const void* from)
         {
             if (to && from)
             {
-                if (auto ca = copy_assign())
-                {
-                    ca(to, from);
-                    return true;
-                }
+                if (_ops)
+                    return _ops->copy_assign(to, from);
             }
 
             return false;
-        }
-
-        move_assign_ty move_assign() const
-        {
-            return _ops ? _ops->move_assign : nullptr;
         }
 
         bool try_move_assign(void* to, void* from)
         {
             if (to && from)
             {
-                if (auto ca = move_assign())
-                {
-                    ca(to, from);
-                    return true;
-                }
+                if (_ops)
+                    return _ops->move_assign(to, from);
             }
 
             return false;
@@ -116,7 +108,7 @@ namespace imp
 		box(const box& o)
 			: _raw(o.try_copy(o._raw)), _type(o._type), _ops(o._ops)
 		{
-			if (!copy() && o._raw)
+			if (o._raw && !_raw)
 				throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
 		}
 
@@ -146,7 +138,7 @@ namespace imp
 				_type = o._type;
 				_ops = o._ops;
 
-				if (!copy() && o._raw)
+				if (o._raw && !_raw)
 					throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
 			}
 
