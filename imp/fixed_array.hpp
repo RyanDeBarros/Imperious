@@ -157,36 +157,6 @@ namespace imp
 				throw out_of_range_error(_length, i);
 		}
 
-		ty* begin() noexcept
-		{
-			return _ptr;
-		}
-
-		ty* end() noexcept
-		{
-			return _ptr + _length;
-		}
-
-		const ty* begin() const noexcept
-		{
-			return _ptr;
-		}
-
-		const ty* end() const noexcept
-		{
-			return _ptr + _length;
-		}
-
-		const ty* cbegin() const noexcept
-		{
-			return _ptr;
-		}
-
-		const ty* cend() const noexcept
-		{
-			return _ptr + _length;
-		}
-
 		operator std::span<ty>() noexcept
 		{
 			return std::span<ty>(_ptr, _length);
@@ -196,5 +166,197 @@ namespace imp
 		{
 			return std::span<const ty>(_ptr, _length);
 		}
+
+        class iterator
+        {
+            friend class fixed_array<ty>;
+            fixed_array<ty>& _arr;
+            size_t _idx = 0;
+
+            iterator(fixed_array<ty>& vec, size_t idx) : _arr(vec), _idx(idx) {}
+
+            size_t idx() const
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                return _idx;
+            }
+
+        public:
+            bool operator==(const iterator& other) const { return &_arr == &other._arr && _idx == other._idx; }
+            bool operator!=(const iterator&) const = default;
+
+            const ty& operator*() const { return _arr[idx()]; }
+            ty& operator*() { return _arr[idx()]; }
+            const ty* operator->() const { return &_arr[idx()]; }
+            ty* operator->() { return &_arr[idx()]; }
+
+            iterator& operator++()
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                ++_idx;
+                return *this;
+            }
+
+            iterator operator++(int)
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                iterator copy = *this;
+                ++_idx;
+                return copy;
+            }
+        };
+
+        class const_iterator
+        {
+            friend class fixed_array<ty>;
+            const fixed_array<ty>& _arr;
+            size_t _idx = 0;
+
+            const_iterator(const fixed_array<ty>& vec, size_t idx) : _arr(vec), _idx(idx) {}
+
+            size_t idx() const
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                return _idx;
+            }
+
+        public:
+            bool operator==(const const_iterator& other) const { return &_arr == &other._arr && _idx == other._idx; }
+            bool operator!=(const const_iterator&) const = default;
+
+            const ty& operator*() const { return _arr[idx()]; }
+            const ty* operator->() const { return &_arr[idx()]; }
+
+            const_iterator& operator++()
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                ++_idx;
+                return *this;
+            }
+
+            const_iterator operator++(int)
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                const_iterator copy = *this;
+                ++_idx;
+                return copy;
+            }
+        };
+
+        class reverse_iterator
+        {
+            friend class fixed_array<ty>;
+            fixed_array<ty>& _arr;
+            size_t _idx = 0;
+
+            reverse_iterator(fixed_array<ty>& vec, size_t idx) : _arr(vec), _idx(idx) {}
+
+            size_t idx() const
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                return _arr.size() - 1 - _idx;
+            }
+
+        public:
+            bool operator==(const reverse_iterator& other) const { return &_arr == &other._arr && _idx == other._idx; }
+            bool operator!=(const reverse_iterator&) const = default;
+
+            const ty& operator*() const { return _arr[idx()]; }
+            ty& operator*() { return _arr[idx()]; }
+            const ty* operator->() const { return &_arr[idx()]; }
+            ty* operator->() { return &_arr[idx()]; }
+
+            reverse_iterator& operator++()
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                ++_idx;
+                return *this;
+            }
+
+            reverse_iterator operator++(int)
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                reverse_iterator copy = *this;
+                ++_idx;
+                return copy;
+            }
+        };
+
+        class const_reverse_iterator
+        {
+            friend class fixed_array<ty>;
+            const fixed_array<ty>& _arr;
+            size_t _idx = 0;
+
+            const_reverse_iterator(const fixed_array<ty>& vec, size_t idx) : _arr(vec), _idx(idx) {}
+
+            size_t idx() const
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                return _arr.size() - 1 - _idx;
+            }
+
+        public:
+            bool operator==(const const_reverse_iterator& other) const { return &_arr == &other._arr && _idx == other._idx; }
+            bool operator!=(const const_reverse_iterator&) const = default;
+
+            const ty& operator*() const { return _arr[idx()]; }
+            const ty* operator->() const { return &_arr[idx()]; }
+
+            const_reverse_iterator& operator++()
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                ++_idx;
+                return *this;
+            }
+
+            const_reverse_iterator operator++(int)
+            {
+                if (_idx >= _arr._length)
+                    throw out_of_range_error(_arr._length, _idx);
+
+                const_reverse_iterator copy = *this;
+                ++_idx;
+                return copy;
+            }
+        };
+
+        iterator begin() { return iterator(*this, 0); }
+        iterator end() { return iterator(*this, _length); }
+
+        const_iterator begin() const { return const_iterator(*this, 0); }
+        const_iterator end() const { return const_iterator(*this, _length); }
+        const_iterator cbegin() const { return const_iterator(*this, 0); }
+        const_iterator cend() const { return const_iterator(*this, _length); }
+
+        reverse_iterator rbegin() { return reverse_iterator(*this, 0); }
+        reverse_iterator rend() { return reverse_iterator(*this, _length); }
+
+        const_reverse_iterator rbegin() const { return const_reverse_iterator(*this, 0); }
+        const_reverse_iterator rend() const { return const_reverse_iterator(*this, _length); }
+        const_reverse_iterator crbegin() const { return const_reverse_iterator(*this, 0); }
+        const_reverse_iterator crend() const { return const_reverse_iterator(*this, _length); }
 	};
 }
