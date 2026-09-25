@@ -43,12 +43,12 @@ namespace imp
                 return false;
         }
 
-        iterator erase(const const_iterator& where)
+        const_iterator erase(const const_iterator& where)
         {
             return _set.erase(where);
         }
 
-        iterator remove(size_t i)
+        const_iterator remove(size_t i)
         {
             return _set.erase(_set.begin() + i);
         }
@@ -131,16 +131,6 @@ namespace imp
             return popped;
         }
 
-        iterator begin()
-        {
-            return _set.begin();
-        }
-
-        iterator end()
-        {
-            return _set.end();
-        }
-
         const_iterator begin() const
         {
             return _set.begin();
@@ -159,16 +149,6 @@ namespace imp
         const_iterator cend() const
         {
             return _set.cend();
-        }
-
-        reverse_iterator rbegin()
-        {
-            return _set.begin();
-        }
-
-        reverse_iterator rend()
-        {
-            return _set.end();
         }
 
         const_reverse_iterator rbegin() const
