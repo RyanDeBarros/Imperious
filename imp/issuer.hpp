@@ -44,7 +44,7 @@ namespace imp
                 return !_issuer.expired();
             }
 
-        protected:
+        public:
             class accessor
             {
                 friend class issuer<derived>::ticket;
@@ -109,6 +109,7 @@ namespace imp
                 }
             };
 
+        protected:
             accessor lock() const
             {
                 return accessor(_issuer.lock());
