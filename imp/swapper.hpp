@@ -58,6 +58,7 @@ namespace imp
         mut_swapper& swap() const
         {
             switch_ = !switch_;
+            return *this;
         }
     };
 }
