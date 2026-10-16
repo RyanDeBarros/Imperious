@@ -55,7 +55,7 @@ namespace imp
             return switch_ ? back_ : front_;
         }
 
-        mut_swapper& swap() const
+        const mut_swapper& swap() const
         {
             switch_ = !switch_;
             return *this;
