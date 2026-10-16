@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 namespace imp
 {
     template<typename ty>
@@ -21,6 +23,18 @@ namespace imp
         mutable bool switch_ = true;
 
     public:
+        mut_swapper() = default;
+
+        explicit mut_swapper(ty element)
+            : front_(element), back_(std::move(element))
+        {
+        }
+
+        mut_swapper(ty front, ty back)
+            : front_(std::move(front)), back_(std::move(back))
+        {
+        }
+
         const ty& front() const
         {
             return switch_ ? front_ : back_;
