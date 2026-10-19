@@ -8,23 +8,30 @@ namespace imp
     {
         size_t h = 0;
 
-        static void hash_combine(size_t& hash, size_t with);
+        static constexpr void hash_combine(size_t& hash, size_t with)
+        {
+            hash ^= with + 0x9e3779b97f4a7c15ULL + (hash << 6) + (hash >> 2);
+        }
 
-        hasher& combine(size_t with);
+        constexpr hasher& combine(size_t with)
+        {
+            hash_combine(h, with);
+            return *this;
+        }
 
         template<typename ty>
-        hasher& with(const ty& obj)
+        constexpr hasher& with(const ty& obj)
         {
             return combine(std::hash<ty>{}(obj));
         }
 
         template<typename hash, typename ty>
-        hasher& with_hash(const ty& obj)
+        constexpr hasher& with_hash(const ty& obj)
         {
             return combine(hash{}(obj));
         }
 
-        operator size_t() const
+        constexpr operator size_t() const
         {
             return h;
         }
@@ -37,13 +44,15 @@ namespace imp
         size_t operator()(const std::array<ty, n>& a) const noexcept
         {
             hasher h;
+
             for (size_t i = 0; i < n; ++i)
                 h.with_hash<hash>(a[i]);
+            
             return h;
         }
 
         template<typename ty>
-        size_t operator()(const std::pair<ty, ty>& p) const noexcept
+        constexpr size_t operator()(const std::pair<ty, ty>& p) const noexcept
         {
             return hasher().with_hash<hash>(p.first).with_hash<hash>(p.second);
         }
@@ -56,13 +65,15 @@ namespace imp
         size_t operator()(const std::array<ty, n>& a) const noexcept
         {
             hasher h;
+            
             for (size_t i = 0; i < n; ++i)
                 h.with(a[i]);
+            
             return h;
         }
 
         template<typename ty>
-        size_t operator()(const std::pair<ty, ty>& p) const noexcept
+        constexpr size_t operator()(const std::pair<ty, ty>& p) const noexcept
         {
             return hasher().with(p.first).with(p.second);
         }
