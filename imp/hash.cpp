@@ -6,4 +6,10 @@ namespace imp
 	{
 		hash ^= with + 0x9e3779b97f4a7c15ULL + (hash << 6) + (hash >> 2);
 	}
+
+    hasher& hasher::combine(size_t with)
+    {
+        hash_combine(h, with);
+        return *this;
+    }
 }

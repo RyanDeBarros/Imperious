@@ -10,17 +10,18 @@ namespace imp
 
 		static void hash_combine(size_t& hash, size_t with);
 
+        hasher& combine(size_t with);
+
 		template<typename ty>
-		hasher& with(const ty& o)
+		hasher& with(const ty& obj)
 		{
-			return with_hash<std::hash<ty>>(o);
+            return combine(std::hash<ty>{}(obj))
 		}
 
 		template<typename hash, typename ty>
-		hasher& with_hash(const ty& o)
+		hasher& with_hash(const ty& obj)
 		{
-			hash_combine(h, hash{}(o));
-			return *this;
+            return combine(hash{}(obj));
 		}
 
 		operator size_t() const
