@@ -7,95 +7,103 @@
 
 namespace imp
 {
-	template<typename ty>
-	class group
-	{
-		template<typename _>
-		friend class group;
+    template<typename ty>
+    class group
+    {
+        template<typename>
+        friend class group;
 
-		ty* _data = nullptr;
-		size_t _count = 0;
+    private:
+        ty* data_ = nullptr;
+        size_t count_ = 0;
 
-	public:
-		group(ty* array, size_t count)
-			: _data(array), _count(count)
-		{
-		}
+    public:
+        group(ty* array, size_t count)
+            : data_(array)
+            , count_(count)
+        {
+        }
 
-		template<typename other_ty> requires std::convertible_to<other_ty*, ty*>
-		group(std::span<other_ty> span)
-			: _data(span.data()), _count(span.size())
-		{
-		}
-		
-		template<typename other_ty, size_t n> requires std::convertible_to<other_ty*, ty*>
-		group(std::array<other_ty, n>& array)
-			: _data(array.data()), _count(n)
-		{
-		}
-		
-		template<typename other_ty, size_t n> requires std::convertible_to<const other_ty*, ty*>
-		group(const std::array<other_ty, n>& array)
-			: _data(array.data()), _count(n)
-		{
-		}
+        template<typename other_ty>
+            requires std::convertible_to<other_ty*, ty*>
+        group(std::span<other_ty> span)
+            : data_(span.data())
+            , count_(span.size())
+        {
+        }
 
-		group<ty>& operator=(const group<const ty>& o)
-		{
-			if (_data != o._data)
-			{
-				if (_count != o._count)
-					throw std::logic_error("imp::group mismatching size in operator=()"); // TODO imp error ?
+        template<typename other_ty, size_t n>
+            requires std::convertible_to<other_ty*, ty*>
+        group(std::array<other_ty, n>& array)
+            : data_(array.data())
+            , count_(n)
+        {
+        }
 
-				// TODO safety checks/workarounds if arrays overlap
-				for (size_t i = 0; i < _count; ++i)
-					_data[i] = o._data[i];
-			}
+        template<typename other_ty, size_t n>
+            requires std::convertible_to<const other_ty*, ty*>
+        group(const std::array<other_ty, n>& array)
+            : data_(array.data())
+            , count_(n)
+        {
+        }
 
-			return *this;
-		}
+        group<ty>& operator=(const group<const ty>& o)
+        {
+            if (data_ != o.data_)
+            {
+                if (count_ != o.count_)
+                    throw std::logic_error("imp::group mismatching size in operator=()"); // TODO imp error ?
 
-		operator group<const ty>() const
-		{
-			return group<const ty>(_data, _count);
-		}
+                // TODO safety checks/workarounds if arrays overlap
+                for (size_t i = 0; i < count_; ++i)
+                    data_[i] = o.data_[i];
+            }
 
-		ty* data() const
-		{
-			return _data;
-		}
+            return *this;
+        }
 
-		size_t size() const
-		{
-			return _count;
-		}
+        operator group<const ty>() const
+        {
+            return group<const ty>(data_, count_);
+        }
 
-		bool operator==(const group<const ty>& o) const
-		{
-			if (_count != o._count)
-				return false;
+        ty* data() const
+        {
+            return data_;
+        }
 
-			for (size_t i = 0; i < _count; ++i)
-			{
-				if (_data[i] != o._data[i])
-					return false;
-			}
+        size_t size() const
+        {
+            return count_;
+        }
 
-			return true;
-		}
+        bool operator==(const group<const ty>& o) const
+        {
+            if (count_ != o.count_)
+                return false;
 
-		bool operator!=(const group<const ty>& o) const
-		{
-			if (_count != o._count)
-				return true;
+            for (size_t i = 0; i < count_; ++i)
+            {
+                if (data_[i] != o.data_[i])
+                    return false;
+            }
 
-			for (size_t i = 0; i < _count; ++i)
-			{
-				if (_data[i] != o._data[i])
-					return true;
-			}
+            return true;
+        }
 
-			return false;
-		}
-	};
+        bool operator!=(const group<const ty>& o) const
+        {
+            if (count_ != o.count_)
+                return true;
+
+            for (size_t i = 0; i < count_; ++i)
+            {
+                if (data_[i] != o.data_[i])
+                    return true;
+            }
+
+            return false;
+        }
+    };
 }

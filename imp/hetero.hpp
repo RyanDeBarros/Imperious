@@ -33,19 +33,19 @@ namespace imp::hetero
         return { value.data(), value.size() };
     }
 
-	struct string_hash
-	{
-		using is_transparent = void;
+    struct string_hash
+    {
+        using is_transparent = void;
 
         template<string_like ty>
         size_t operator()(const ty& value) const noexcept
         {
             return std::hash<std::string_view>{}(to_string_view(value));
         }
-	};
+    };
 
-	struct string_equal
-	{
+    struct string_equal
+    {
         using is_transparent = void;
 
         template<string_like lty, string_like rty>
@@ -53,7 +53,7 @@ namespace imp::hetero
         {
             return to_string_view(lhs) == to_string_view(rhs);
         }
-	};
+    };
 
     struct string_less
     {
@@ -66,13 +66,13 @@ namespace imp::hetero
         }
     };
 
-	template<typename value>
-	using string_umap = std::unordered_map<std::string, value, string_hash, string_equal>;
-	
-	template<typename value>
-	using string_map = std::map<std::string, value, string_less>;
+    template<typename value>
+    using string_umap = std::unordered_map<std::string, value, string_hash, string_equal>;
 
-	using string_uset = std::unordered_set<std::string, string_hash, string_equal>;
+    template<typename value>
+    using string_map = std::map<std::string, value, string_less>;
 
-	using string_set = std::set<std::string, string_less>;
+    using string_uset = std::unordered_set<std::string, string_hash, string_equal>;
+
+    using string_set = std::set<std::string, string_less>;
 }

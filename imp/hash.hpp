@@ -8,6 +8,11 @@ namespace imp
     {
         size_t h = 0;
 
+        constexpr operator size_t() const
+        {
+            return h;
+        }
+
         static constexpr void hash_combine(size_t& hash, size_t with)
         {
             hash ^= with + 0x9e3779b97f4a7c15ULL + (hash << 6) + (hash >> 2);
@@ -29,11 +34,6 @@ namespace imp
         constexpr hasher& with_hash(const ty& obj)
         {
             return combine(hash{}(obj));
-        }
-
-        constexpr operator size_t() const
-        {
-            return h;
         }
     };
 

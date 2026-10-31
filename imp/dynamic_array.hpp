@@ -35,7 +35,8 @@ namespace imp
         struct out_of_range_error
             : public std::runtime_error
         {
-            size_t size, index;
+            size_t size;
+            size_t index;
 
             out_of_range_error(size_t size, size_t index)
                 : index(index)

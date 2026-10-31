@@ -6,173 +6,179 @@
 
 namespace imp
 {
-	template<typename... args>
-	class event;
+    template<typename... args>
+    class event;
 
-	class event_listener
-	{
-		void* _event = nullptr;
-		size_t _h = 0;
-		void (*_resubscribe)(event_listener&, event_listener*) = nullptr;
+    class event_listener
+    {
+        template<typename... args>
+        friend class event;
 
-		template<typename... args>
-		friend class event;
+    private:
+        void* event_ = nullptr;
+        size_t h_ = 0;
+        void (*resubscribe_)(event_listener&, event_listener*) = nullptr;
 
-		template<typename... args>
-		event_listener(event<args...>* event_, size_t h) : _event(event_), _h(h)
-		{
-			_resubscribe = &resubscribe<args...>;
-		}
+    private:
+        template<typename... args>
+        event_listener(event<args...>* e, size_t h)
+            : event_(e)
+            , h_(h)
+        {
+            resubscribe_ = &resubscribe<args...>;
+        }
 
-		template<typename... args>
-		static void resubscribe(event_listener& from, event_listener* to)
-		{
-			if (to)
-			{
-				to->_event = from._event;
-				to->_h = from._h;
-				to->_resubscribe = from._resubscribe;
-			}
+    public:
+        event_listener() = default;
 
-			if (auto e = static_cast<event<args...>*>(from._event))
-			{
-				if (to)
-				{
-					auto it = e->_listeners.find(from._h);
-					if (it != e->_listeners.end())
-						it->second.event_listener_ = to;
+        event_listener(const event_listener&) = delete;
+        event_listener(event_listener&& o) noexcept
+        {
+            if (o.resubscribe_)
+                o.resubscribe_(o, this);
+        }
 
-					from._event = nullptr;
-					from._h = 0;
-					from._resubscribe = nullptr;
-				}
-				else
-					e->unsubscribe(from);
-			}
-		}
+        ~event_listener()
+        {
+            detach();
+        }
 
-	public:
-		event_listener() = default;
+        event_listener& operator=(event_listener&& o) noexcept
+        {
+            if (this != &o)
+            {
+                detach();
+                if (o.resubscribe_)
+                    o.resubscribe_(o, this);
+            }
 
-		event_listener(const event_listener&) = delete;
-		event_listener(event_listener&& o) noexcept
-		{
-			if (o._resubscribe)
-				o._resubscribe(o, this);
-		}
+            return *this;
+        }
 
-		~event_listener()
-		{
-			detach();
-		}
+        void detach()
+        {
+            if (resubscribe_)
+                resubscribe_(*this, nullptr);
+        }
 
-		event_listener& operator=(event_listener&& o) noexcept
-		{
-			if (this != &o)
-			{
-				detach();
-				if (o._resubscribe)
-					o._resubscribe(o, this);
-			}
+    private:
+        template<typename... args>
+        static void resubscribe(event_listener& from, event_listener* to)
+        {
+            if (to)
+            {
+                to->event_ = from.event_;
+                to->h_ = from.h_;
+                to->resubscribe_ = from.resubscribe_;
+            }
 
-			return *this;
-		}
+            if (auto e = static_cast<event<args...>*>(from.event_))
+            {
+                if (to)
+                {
+                    auto it = e->listeners_.find(from.h_);
+                    if (it != e->listeners_.end())
+                        it->second.event_listener_ = to;
 
-		void detach()
-		{
-			if (_resubscribe)
-				_resubscribe(*this, nullptr);
-		}
-	};
+                    from.event_ = nullptr;
+                    from.h_ = 0;
+                    from.resubscribe_ = nullptr;
+                }
+                else
+                    e->unsubscribe(from);
+            }
+        }
+    };
 
-	template<typename... args>
-	class event
-	{
-		friend class event_listener;
+    template<typename... args>
+    class event
+    {
+        friend class event_listener;
 
-	public:
-		using callback = std::function<void(args...)>;
+    public:
+        using callback = std::function<void(args...)>;
 
-	private:
-		struct internal_listener
-		{
-			event_listener* event_listener_;
-			callback callback_;
+    private:
+        struct internal_listener
+        {
+            event_listener* event_listener_;
+            callback callback_;
 
-			internal_listener(event_listener* event_listener, callback callback)
-				: event_listener_(event_listener), callback_(std::move(callback))
-			{
-			}
-		};
+            internal_listener(event_listener* event_listener, callback callback)
+                : event_listener_(event_listener), callback_(std::move(callback))
+            {
+            }
+        };
 
-		std::unordered_map<size_t, internal_listener> _listeners;
-		std::stack<size_t> _free_event_listeners;
+    private:
+        std::unordered_map<size_t, internal_listener> listeners_;
+        std::stack<size_t> freed_listeners_;
 
-	public:
-		event() = default;
-		event(const event&) = delete;
-		event(event&&) = delete;
+    public:
+        event() = default;
+        event(const event&) = delete;
+        event(event&&) = delete;
 
-		~event()
-		{
-			clear();
-		}
+        ~event()
+        {
+            clear();
+        }
 
-		event_listener subscribe(callback callback)
-		{
-			size_t h;
-			if (_free_event_listeners.empty())
-				h = _listeners.size();
-			else
-			{
-				h = _free_event_listeners.top();
-				_free_event_listeners.pop();
-			}
+        event_listener subscribe(callback callback)
+        {
+            size_t h;
+            if (freed_listeners_.empty())
+                h = listeners_.size();
+            else
+            {
+                h = freed_listeners_.top();
+                freed_listeners_.pop();
+            }
 
-			event_listener event_listener(this, h);
-			_listeners.emplace(h, internal_listener(&event_listener, std::move(callback)));
-			return event_listener;
-		}
+            event_listener event_listener(this, h);
+            listeners_.emplace(h, internal_listener(&event_listener, std::move(callback)));
+            return event_listener;
+        }
 
-		bool unsubscribe(event_listener& event_listener)
-		{
-			if (this == event_listener._event)
-			{
-				auto it = _listeners.find(event_listener._h);
-				if (it == _listeners.end())
-					return false;
+        bool unsubscribe(event_listener& listener)
+        {
+            if (this == listener.event_)
+            {
+                auto it = listeners_.find(listener.h_);
+                if (it == listeners_.end())
+                    return false;
 
-				_listeners.erase(it);
-				_free_event_listeners.push(event_listener._h);
+                listeners_.erase(it);
+                freed_listeners_.push(listener.h_);
 
-				event_listener._event = nullptr;
-				event_listener._h = 0;
-				event_listener._resubscribe = nullptr;
-				return true;
-			}
-			else
-				return false;
-		}
+                listener.event_ = nullptr;
+                listener.h_ = 0;
+                listener.resubscribe_ = nullptr;
+                return true;
+            }
+            else
+                return false;
+        }
 
-		void invoke(args... args_)
-		{
-			for (auto& [h, listener] : _listeners)
-				listener.callback_(args_...);
-		}
+        void invoke(args... args_)
+        {
+            for (auto& [h, listener] : listeners_)
+                listener.callback_(args_...);
+        }
 
-		void clear()
-		{
-			for (auto& [h, listener] : _listeners)
-			{
-				listener.event_listener_->_event = nullptr;
-				listener.event_listener_->_h = 0;
-				listener.event_listener_->_resubscribe = nullptr;
-			}
+        void clear()
+        {
+            for (auto& [h, listener] : listeners_)
+            {
+                listener.event_listener_->event_ = nullptr;
+                listener.event_listener_->h_ = 0;
+                listener.event_listener_->resubscribe_ = nullptr;
+            }
 
-			_listeners.clear();
+            listeners_.clear();
 
-			while (!_free_event_listeners.empty())
-				_free_event_listeners.pop();
-		}
-	};
+            while (!freed_listeners_.empty())
+                freed_listeners_.pop();
+        }
+    };
 }

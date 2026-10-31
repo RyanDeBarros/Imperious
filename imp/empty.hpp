@@ -5,4 +5,6 @@ namespace imp
     struct empty
     {
     };
+
+    constexpr empty kEmpty{};
 }
