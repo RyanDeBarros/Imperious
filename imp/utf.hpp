@@ -59,7 +59,7 @@ namespace imp::utf
 
     class string
     {
-        friend class iterator;
+        struct iterator;
 
     private:
         std::u8string str_ = u8"";

@@ -10,6 +10,7 @@ namespace imp
         : public std::enable_shared_from_this<issuer<derived>>
     {
         using super = std::enable_shared_from_this<issuer<derived>>;
+        class ticket;
 
     protected:
         issuer() = default;
@@ -20,10 +21,10 @@ namespace imp
         issuer& operator=(issuer&&) noexcept = default;
 
     public:
-        template<typename... args>
-        static std::shared_ptr<derived> instantiate(args&&... args_)
+        template<typename... args_ty>
+        static std::shared_ptr<derived> instantiate(args_ty&&... args)
         {
-            return std::make_shared<derived>(std::forward<args>(args_)...);
+            return std::make_shared<derived>(std::forward<args_ty>(args)...);
         }
 
         ticket issue()
