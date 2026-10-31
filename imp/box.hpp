@@ -8,8 +8,8 @@
 
 namespace imp
 {
-	class box
-	{
+    class box
+    {
         using dtor_ty = void (*)(void*);
         using copy_ty = void* (*)(const void*);
         using copy_assign_ty = bool(*)(void*, const void*);
@@ -23,9 +23,9 @@ namespace imp
             move_assign_ty move_assign = nullptr;
         };
 
+    private:
         template<typename ty>
-        static constexpr ops ops_impl
-        {
+        static constexpr ops kOps = {
             [](void* ptr) { delete static_cast<ty*>(ptr); },
             [](const void* ptr) -> void*
             {
@@ -56,20 +56,149 @@ namespace imp
             }
         };
 
-		void* _raw = nullptr;
-        type_erasure _type;
-        const ops* _ops = nullptr;
+        void* raw_ = nullptr;
+        type_erasure type_;
+        const ops* ops_ = nullptr;
 
+    public:
+        box() = default;
+
+        template<typename ty>
+        box(ty* raw)
+            : raw_(raw), type_(erase_type<ty>()), ops_(&kOps<ty>)
+        {
+        }
+
+        box(const box& o)
+            : raw_(o.try_copy(o.raw_)), type_(o.type_), ops_(o.ops_)
+        {
+            if (o.raw_ && !raw_)
+                throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
+        }
+
+        box(box&& o) noexcept
+            : raw_(o.raw_), type_(o.type_), ops_(o.ops_)
+        {
+            o.raw_ = nullptr;
+            o.type_ = type_erasure();
+            o.ops_ = nullptr;
+        }
+
+        ~box()
+        {
+            try_dtor(raw_);
+        }
+
+        box& operator=(const box& o)
+        {
+            if (this != &o)
+            {
+                if (type_ != o.type_ || !try_copy_assign(raw_, o.raw_))
+                {
+                    try_dtor(raw_);
+                    raw_ = o.try_copy(o.raw_);
+                }
+
+                type_ = o.type_;
+                ops_ = o.ops_;
+
+                if (o.raw_ && !raw_)
+                    throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
+            }
+
+            return *this;
+        }
+
+        box& operator=(box&& o) noexcept
+        {
+            if (this != &o)
+            {
+                if (type_ != o.type_ || !try_move_assign(raw_, o.raw_))
+                {
+                    try_dtor(raw_);
+                    raw_ = o.raw_;
+                }
+
+                type_ = o.type_;
+                ops_ = o.ops_;
+
+                o.raw_ = nullptr;
+                o.type_ = type_erasure();
+                o.ops_ = nullptr;
+            }
+
+            return *this;
+        }
+
+    public:
+        template<typename ty>
+        bool holds() const
+        {
+            return type_ == erase_type<ty>();
+        }
+
+        bool holds(type_erasure type) const
+        {
+            return type_ == type;
+        }
+
+        type_erasure type() const
+        {
+            return type_;
+        }
+
+        const void* unsafe_raw() const
+        {
+            return raw_;
+        }
+
+        void* unsafe_raw()
+        {
+            return raw_;
+        }
+
+        template<typename ty>
+        const ty* as() const
+        {
+            if (holds<ty>())
+                return static_cast<const ty*>(raw_);
+            else
+                return nullptr;
+        }
+
+        template<typename ty>
+        ty* as()
+        {
+            if (holds<ty>())
+                return static_cast<ty*>(raw_);
+            else
+                return nullptr;
+        }
+
+        template<typename ty>
+        std::unique_ptr<ty> consume()
+        {
+            if (holds<ty>())
+            {
+                std::unique_ptr<ty> ptr(static_cast<ty*>(raw_));
+                raw_ = nullptr;
+                return ptr;
+            }
+            else
+                return nullptr;
+        }
+
+    private:
         void try_dtor(void* ptr) const
         {
-            if (_ops)
-                _ops->dtor(ptr);
+            if (ops_)
+                ops_->dtor(ptr);
         }
 
         void* try_copy(const void* ptr) const
         {
-            if (_ops)
-                return _ops->copy(ptr);
+            if (ops_)
+                return ops_->copy(ptr);
             else
                 return nullptr;
         }
@@ -78,8 +207,8 @@ namespace imp
         {
             if (to && from)
             {
-                if (_ops)
-                    return _ops->copy_assign(to, from);
+                if (ops_)
+                    return ops_->copy_assign(to, from);
             }
 
             return false;
@@ -89,148 +218,23 @@ namespace imp
         {
             if (to && from)
             {
-                if (_ops)
-                    return _ops->move_assign(to, from);
+                if (ops_)
+                    return ops_->move_assign(to, from);
             }
 
             return false;
         }
+    };
 
-	public:
-        box() = default;
+    template<typename ty, typename... args>
+        requires (!std::is_void_v<ty>)
+    box make_box(args&&... args_)
+    {
+        return box(new ty(std::forward<args>(args_)...));
+    }
 
-		template<typename ty>
-		box(ty* raw)
-			: _raw(raw), _type(erase_type<ty>()), _ops(&ops_impl<ty>)
-		{
-		}
-
-		box(const box& o)
-			: _raw(o.try_copy(o._raw)), _type(o._type), _ops(o._ops)
-		{
-			if (o._raw && !_raw)
-				throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
-		}
-
-        box(box&& o) noexcept
-            : _raw(o._raw), _type(o._type), _ops(o._ops)
-        {
-            o._raw = nullptr;
-            o._type = type_erasure();
-			o._ops = nullptr;
-		}
-
-		~box()
-		{
-            try_dtor(_raw);
-		}
-
-		box& operator=(const box& o)
-		{
-			if (this != &o)
-			{
-                if (_type != o._type || !try_copy_assign(_raw, o._raw))
-                {
-                    try_dtor(_raw);
-                    _raw = o.try_copy(o._raw);
-                }
-
-				_type = o._type;
-				_ops = o._ops;
-
-				if (o._raw && !_raw)
-					throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
-			}
-
-			return *this;
-		}
-
-		box& operator=(box&& o) noexcept
-		{
-			if (this != &o)
-			{
-                if (_type != o._type || !try_move_assign(_raw, o._raw))
-                {
-                    try_dtor(_raw);
-	    			_raw = o._raw;
-                }
-
-				_type = o._type;
-				_ops = o._ops;
-
-				o._raw = nullptr;
-				o._type = type_erasure();
-				o._ops = nullptr;
-			}
-
-			return *this;
-		}
-
-		template<typename ty>
-		bool holds() const
-		{
-			return _type == erase_type<ty>();
-		}
-
-		bool holds(type_erasure type) const
-		{
-			return _type == type;
-		}
-
-        type_erasure type() const
-        {
-            return _type;
-        }
-
-        const void* unsafe_raw() const
-        {
-            return _raw;
-        }
-
-        void* unsafe_raw()
-        {
-            return _raw;
-        }
-
-		template<typename ty>
-		const ty* as() const
-		{
-			if (holds<ty>())
-				return static_cast<const ty*>(_raw);
-			else
-				return nullptr;
-		}
-
-		template<typename ty>
-		ty* as()
-		{
-			if (holds<ty>())
-				return static_cast<ty*>(_raw);
-			else
-				return nullptr;
-		}
-
-		template<typename ty>
-		std::unique_ptr<ty> consume()
-		{
-			if (holds<ty>())
-			{
-				std::unique_ptr<ty> ptr(static_cast<ty*>(_raw));
-				_raw = nullptr;
-				return ptr;
-			}
-			else
-				return nullptr;
-		}
-	};
-
-	template<typename ty, typename... args> requires (!std::is_void_v<ty>)
-	box make_box(args&&... args_)
-	{
-		return box(new ty(std::forward<args>(args_)...));
-	}
-
-	template<typename ty, typename... args> requires (!std::is_void_v<ty>)
+    template<typename ty, typename... args>
+        requires (!std::is_void_v<ty>)
     void copy_box(box& b, args&&... args_)
     {
         if (ty* obj = b.as<ty>())

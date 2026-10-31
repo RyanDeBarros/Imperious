@@ -7,19 +7,20 @@ namespace imp
     template<typename ty>
     class contiguous_set
     {
-        std::vector<ty> _set;
+        std::vector<ty> set_;
 
-        typedef std::vector<ty>::iterator               iterator;
-        typedef std::vector<ty>::const_iterator         const_iterator;
-        typedef std::vector<ty>::reverse_iterator       reverse_iterator;
-        typedef std::vector<ty>::const_reverse_iterator const_reverse_iterator;
+        using iterator = std::vector<ty>::iterator;
+        using const_iterator = std::vector<ty>::const_iterator;
+        using reverse_iterator = std::vector<ty>::reverse_iterator;
+        using const_reverse_iterator = std::vector<ty>::const_reverse_iterator ;
 
     public:
         bool insert(const ty& el)
         {
             if (contains(el))
                 return false;
-            _set.push_back(el);
+
+            set_.push_back(el);
             return true;
         }
 
@@ -27,16 +28,17 @@ namespace imp
         {
             if (contains(el))
                 return false;
-            _set.push_back(std::move(el));
+
+            set_.push_back(std::move(el));
             return true;
         }
 
         bool erase(const ty& el)
         {
             auto it = find(el);
-            if (it != _set.end())
+            if (it != set_.end())
             {
-                _set.erase(it);
+                set_.erase(it);
                 return true;
             }
             else
@@ -45,12 +47,12 @@ namespace imp
 
         const_iterator erase(const const_iterator& where)
         {
-            return _set.erase(where);
+            return set_.erase(where);
         }
 
         const_iterator remove(size_t i)
         {
-            return _set.erase(_set.begin() + i);
+            return set_.erase(set_.begin() + i);
         }
 
         template<typename uy>
@@ -59,11 +61,11 @@ namespace imp
             if (existing == with)
                 return false;
 
-            auto it_existing = _find(existing);
-            if (it_existing != _set.end())
+            auto it_existing = find_mut(existing);
+            if (it_existing != set_.end())
             {
                 if (contains(with))
-                    _set.erase(it_existing);
+                    set_.erase(it_existing);
                 else
                     *it_existing = std::forward<uy>(with);
                 return true;
@@ -72,103 +74,102 @@ namespace imp
                 return false;
         }
 
-    private:
-        iterator _find(const ty& el)
-        {
-            return std::find(_set.begin(), _set.end(), el);
-        }
-
-    public:
         const_iterator find(const ty& el) const
         {
-            return std::find(_set.begin(), _set.end(), el);
+            return std::find(set_.begin(), set_.end(), el);
         }
 
         bool contains(const ty& el) const
         {
-            return find(el) != _set.end();
+            return find(el) != set_.end();
         }
 
         void clear()
         {
-            _set.clear();
+            set_.clear();
         }
 
         size_t size() const
         {
-            return _set.size();
+            return set_.size();
         }
 
         bool empty() const
         {
-            return _set.empty();
+            return set_.empty();
         }
 
         const ty* data() const
         {
-            return _set.data();
+            return set_.data();
         }
 
         const ty& operator[](size_t i) const
         {
-            return _set[i];
+            return set_[i];
         }
 
         const ty& front() const
         {
-            return _set.front();
+            return set_.front();
         }
 
         const ty& back() const
         {
-            return _set.back();
+            return set_.back();
         }
 
         ty pop()
         {
-            ty popped = std::move(_set.back());
-            _set.pop_back();
+            ty popped = std::move(set_.back());
+            set_.pop_back();
             return popped;
         }
 
         const_iterator begin() const
         {
-            return _set.begin();
+            return set_.begin();
         }
 
         const_iterator end() const
         {
-            return _set.end();
+            return set_.end();
         }
 
         const_iterator cbegin() const
         {
-            return _set.cbegin();
+            return set_.cbegin();
         }
 
         const_iterator cend() const
         {
-            return _set.cend();
+            return set_.cend();
         }
 
         const_reverse_iterator rbegin() const
         {
-            return _set.begin();
+            return set_.begin();
         }
 
         const_reverse_iterator rend() const
         {
-            return _set.end();
+            return set_.end();
         }
 
         const_reverse_iterator crbegin() const
         {
-            return _set.crbegin();
+            return set_.crbegin();
         }
 
         const_reverse_iterator crend() const
         {
-            return _set.crend();
+            return set_.crend();
+        }
+
+    private:
+        iterator find_mut(const ty& el)
+        {
+            return std::find(set_.begin(), set_.end(), el);
         }
     };
 }

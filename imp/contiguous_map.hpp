@@ -7,22 +7,25 @@ namespace imp
     template<typename key_ty, typename value_ty>
     class contiguous_map
     {
+    private:
         struct pair
         {
             key_ty key;
             mutable value_ty value;
         };
 
-        std::vector<pair> _map;
+    public:
+        using const_iterator = std::vector<pair>::const_iterator;
+        using iterator = std::vector<pair>::iterator;
+
+    private:
+        std::vector<pair> map_;
 
     public:
-        typedef std::vector<pair>::const_iterator const_iterator;
-        typedef std::vector<pair>::iterator       iterator;
-
         template<typename key_ty_, typename value_ty_>
         const_iterator assign(key_ty_&& key, value_ty_&& value)
         {
-            for (auto it = _map.begin(); it != _map.end(); ++it)
+            for (auto it = map_.begin(); it != map_.end(); ++it)
             {
                 if (it->key == key)
                 {
@@ -31,13 +34,13 @@ namespace imp
                 }
             }
 
-            _map.push_back({ std::forward<key_ty_>(key), std::forward<value_ty_>(value) });
-            return _map.end() - 1;
+            map_.push_back({ std::forward<key_ty_>(key), std::forward<value_ty_>(value) });
+            return map_.end() - 1;
         }
 
         const value_ty* try_get(const key_ty& key) const
         {
-            for (const pair& pair : _map)
+            for (const pair& pair : map_)
             {
                 if (pair.key == key)
                     return &pair.value;
@@ -48,7 +51,7 @@ namespace imp
 
         value_ty* try_get(const key_ty& key)
         {
-            for (const pair& pair : _map)
+            for (const pair& pair : map_)
             {
                 if (pair.key == key)
                     return &pair.value;
@@ -59,38 +62,38 @@ namespace imp
 
         const_iterator erase(const key_ty& key)
         {
-            return _map.erase(find(key));
+            return map_.erase(find(key));
         }
 
         const_iterator erase(const const_iterator& where)
         {
-            return _map.erase(where);
+            return map_.erase(where);
         }
 
         const_iterator find(const key_ty& key) const
         {
-            for (auto it = _map.begin(); it != _map.end(); ++it)
+            for (auto it = map_.begin(); it != map_.end(); ++it)
             {
                 if (it->key == key)
                     return it;
             }
 
-            return _map.end();
+            return map_.end();
         }
 
         const_iterator begin() const
         {
-            return _map.begin();
+            return map_.begin();
         }
 
         const_iterator end() const
         {
-            return _map.end();
+            return map_.end();
         }
 
         bool contains(const key_ty& key) const
         {
-            for (auto it = _map.begin(); it != _map.end(); ++it)
+            for (auto it = map_.begin(); it != map_.end(); ++it)
             {
                 if (it->key == key)
                     return true;
@@ -101,17 +104,17 @@ namespace imp
 
         bool empty() const
         {
-            return _map.empty();
+            return map_.empty();
         }
 
         size_t size() const
         {
-            return _map.size();
+            return map_.size();
         }
 
         void clear()
         {
-            _map.clear();
+            map_.clear();
         }
     };
 }

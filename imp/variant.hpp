@@ -10,7 +10,7 @@ namespace imp
     template<typename... types>
     class variant
     {
-        static_assert(imp::dependent_false_v<variant<types...>>);
+        static_assert(imp::kDependentFalse<variant<types...>>);
     };
 
 #define _IMP_ENUM_DEF(N) _##N
@@ -250,7 +250,7 @@ namespace imp
 	static constexpr type type_of()\
 	{\
 		_IMP_REPEAT(_IMP_TYPE_OF_CASE, N);\
-		static_assert(imp::dependent_false_v<ty_>);\
+		static_assert(imp::kDependentFalse<ty_>);\
 	}
 
 #define _IMP_TYPENAME_TY(N) typename ty_##N

@@ -6,269 +6,284 @@
 
 namespace imp
 {
-	struct resize_strategy
-	{
-		float mult = 1.5f;
-		size_t increment = 1;
+    struct resize_strategy
+    {
+        float mult = 1.5f;
+        size_t increment = 1;
 
-		constexpr bool valid() const
-		{
-			return mult >= 1.f && increment > 0;
-		}
+        constexpr bool valid() const
+        {
+            return mult >= 1.f && increment > 0;
+        }
 
-		constexpr size_t new_capacity(size_t capacity) const
-		{
-			return static_cast<size_t>(capacity * mult) + increment;
-		}
-	};
+        constexpr size_t new_capacity(size_t capacity) const
+        {
+            return static_cast<size_t>(capacity * mult) + increment;
+        }
+    };
 
-	template<typename ty, resize_strategy resize_strategy = resize_strategy()>
-	class dynamic_array
-	{
-		static_assert(resize_strategy.valid(), "invalid resize strategy");
+    template<
+        typename ty,
+        resize_strategy resize_strategy = resize_strategy()
+    >
+    class dynamic_array
+    {
+        static_assert(resize_strategy.valid(), "invalid resize strategy");
 
-		size_t _size = 0;
-		size_t _capacity = 0;
-		ty* _arr = nullptr;
+    public:
+        // TODO imp error ?
+        struct out_of_range_error
+            : public std::runtime_error
+        {
+            size_t size, index;
 
-	public:
-		// TODO imp error ?
-		struct out_of_range_error : public std::runtime_error
-		{
-			size_t size, index;
+            out_of_range_error(size_t size, size_t index)
+                : index(index)
+                , size(size)
+                , std::runtime_error(
+                    "index " + std::to_string(index) + " out of range for array size " + std::to_string(size))
+            {
+            }
+        };
 
-			out_of_range_error(size_t size, size_t index)
-				: index(index), size(size), std::runtime_error("index " + std::to_string(index) + " out of range for array size " + std::to_string(size))
-			{
-			}
-		};
+    private:
+        size_t size_ = 0;
+        size_t capacity_ = 0;
+        ty* arr_ = nullptr;
 
-		dynamic_array() = default;
+    public:
+        dynamic_array() = default;
 
-		dynamic_array(const dynamic_array& o)
-			: _size(o._size), _capacity(o._capacity), _arr(new ty[_capacity])
-		{
-			for (size_t i = 0; i < _size; ++i)
-				_arr[i] = o._arr[i];
-		}
+        dynamic_array(const dynamic_array& o)
+            : size_(o.size_)
+            , capacity_(o.capacity_)
+            , arr_(new ty[capacity_])
+        {
+            for (size_t i = 0; i < size_; ++i)
+                arr_[i] = o.arr_[i];
+        }
 
-		dynamic_array(dynamic_array&& o) noexcept
-			: _size(o._size), _capacity(o._capacity), _arr(o._arr)
-		{
-			o._arr = nullptr;
-			o._capacity = 0;
-			o._size = 0;
-		}
+        dynamic_array(dynamic_array&& o) noexcept
+            : size_(o.size_)
+            , capacity_(o.capacity_)
+            , arr_(o.arr_)
+        {
+            o.arr_ = nullptr;
+            o.capacity_ = 0;
+            o.size_ = 0;
+        }
 
-		~dynamic_array()
-		{
-			delete[] _arr;
-		}
+        ~dynamic_array()
+        {
+            delete[] arr_;
+        }
 
-		dynamic_array& operator=(const dynamic_array& o)
-		{
-			if (this != &o)
-			{
-				delete[] _arr;
-				_size = o._size;
-				_capacity = o._capacity;
-				_arr = new ty[_capacity];
-				for (size_t i = 0; i < _size; ++i)
-					_arr[i] = o._arr[i];
-			}
+        dynamic_array& operator=(const dynamic_array& o)
+        {
+            if (this != &o)
+            {
+                delete[] arr_;
+                size_ = o.size_;
+                capacity_ = o.capacity_;
+                arr_ = new ty[capacity_];
+                for (size_t i = 0; i < size_; ++i)
+                    arr_[i] = o.arr_[i];
+            }
 
-			return *this;
-		}
+            return *this;
+        }
 
-		dynamic_array& operator=(dynamic_array&& o) noexcept
-		{
-			if (this != &o)
-			{
-				delete[] _arr;
-				_size = o._size;
-				_capacity = o._capacity;
-				_arr = o._arr;
-				o._arr = nullptr;
-				o._capacity = 0;
-				o._size = 0;
-			}
+        dynamic_array& operator=(dynamic_array&& o) noexcept
+        {
+            if (this != &o)
+            {
+                delete[] arr_;
+                size_ = o.size_;
+                capacity_ = o.capacity_;
+                arr_ = o.arr_;
+                o.arr_ = nullptr;
+                o.capacity_ = 0;
+                o.size_ = 0;
+            }
 
-			return *this;
-		}
+            return *this;
+        }
 
-		const ty& operator[](size_t i) const
-		{
-			if (i < _size)
-				return _arr[i];
-			else
-				throw out_of_range_error(_size, i);
-		}
+        const ty& operator[](size_t i) const
+        {
+            if (i < size_)
+                return arr_[i];
+            else
+                throw out_of_range_error(size_, i);
+        }
 
-		ty& operator[](size_t i)
-		{
-			if (i < _size)
-				return _arr[i];
-			else
-				throw out_of_range_error(_size, i);
-		}
+        ty& operator[](size_t i)
+        {
+            if (i < size_)
+                return arr_[i];
+            else
+                throw out_of_range_error(size_, i);
+        }
 
-		const ty* data() const noexcept
-		{
-			return _arr;
-		}
+        operator std::span<ty>() noexcept
+        {
+            return std::span<ty>(arr_, size_);
+        }
 
-		ty* data() noexcept
-		{
-			return _arr;
-		}
+        operator std::span<const ty>() const noexcept
+        {
+            return std::span<const ty>(arr_, size_);
+        }
 
-		size_t size() const noexcept
-		{
-			return _size;
-		}
+        const ty* data() const noexcept
+        {
+            return arr_;
+        }
 
-		size_t capacity() const noexcept
-		{
-			return _capacity;
-		}
+        ty* data() noexcept
+        {
+            return arr_;
+        }
 
-		ty* begin() noexcept
-		{
-			return _arr;
-		}
+        size_t size() const noexcept
+        {
+            return size_;
+        }
 
-		ty* end() noexcept
-		{
-			return _arr + _size;
-		}
+        size_t capacity() const noexcept
+        {
+            return capacity_;
+        }
 
-		const ty* begin() const noexcept
-		{
-			return _arr;
-		}
+        ty* begin() noexcept
+        {
+            return arr_;
+        }
 
-		const ty* end() const noexcept
-		{
-			return _arr + _size;
-		}
+        ty* end() noexcept
+        {
+            return arr_ + size_;
+        }
 
-		const ty* cbegin() const noexcept
-		{
-			return _arr;
-		}
+        const ty* begin() const noexcept
+        {
+            return arr_;
+        }
 
-		const ty* cend() const noexcept
-		{
-			return _arr + _size;
-		}
+        const ty* end() const noexcept
+        {
+            return arr_ + size_;
+        }
 
-		operator std::span<ty>() noexcept
-		{
-			return std::span<ty>(_arr, _size);
-		}
+        const ty* cbegin() const noexcept
+        {
+            return arr_;
+        }
 
-		operator std::span<const ty>() const noexcept
-		{
-			return std::span<const ty>(_arr, _size);
-		}
+        const ty* cend() const noexcept
+        {
+            return arr_ + size_;
+        }
 
-		void push_back(ty obj)
-		{
-			if (_size == _capacity)
-				reallocate();
+        void push_back(ty obj)
+        {
+            if (size_ == capacity_)
+                reallocate();
 
-			_arr[_size++] = std::move(obj);
-		}
+            arr_[size_++] = std::move(obj);
+        }
 
-		void insert(size_t pos, ty obj)
-		{
-			if (pos > _size)
-				throw out_of_range_error(_size, pos);
+        void insert(size_t pos, ty obj)
+        {
+            if (pos > size_)
+                throw out_of_range_error(size_, pos);
 
-			if (_size == _capacity)
-				reallocate();
+            if (size_ == capacity_)
+                reallocate();
 
-			for (long i = _size - 1; i >= pos; --i)
-				_arr[i + 1] = std::move(_arr[i]);
-			_arr[pos] = std::move(obj);
-			++_size;
-		}
+            for (long i = size_ - 1; i >= pos; --i)
+                arr_[i + 1] = std::move(arr_[i]);
 
-		void erase(size_t pos)
-		{
-			if (pos >= _size)
-				throw out_of_range_error(_size, pos);
+            arr_[pos] = std::move(obj);
+            ++size_;
+        }
 
-			for (long i = pos; i < _size - 1; ++i)
-				_arr[i] = std::move(_arr[i + 1]);
-			--_size;
-		}
+        void erase(size_t pos)
+        {
+            if (pos >= size_)
+                throw out_of_range_error(size_, pos);
 
-		void clear()
-		{
-			delete[] _arr;
-			_arr = nullptr;
-			_capacity = 0;
-			_size = 0;
-		}
+            for (long i = pos; i < size_ - 1; ++i)
+                arr_[i] = std::move(arr_[i + 1]);
 
-		ty* release(size_t& out_size)
-		{
-			if (_size == 0)
-			{
-				out_size = 0;
-				return nullptr;
-			}
+            --size_;
+        }
 
-			if (_size != _capacity)
-			{
-				ty* new_arr = new ty[_size];
-				for (size_t i = 0; i < _size; ++i)
-					new_arr[i] = std::move(_arr[i]);
+        void clear()
+        {
+            delete[] arr_;
+            arr_ = nullptr;
+            capacity_ = 0;
+            size_ = 0;
+        }
 
-				delete[] _arr;
-				_arr = new_arr;
-				_capacity = _size;
-			}
+        ty* release(size_t& out_size)
+        {
+            if (size_ == 0)
+            {
+                out_size = 0;
+                return nullptr;
+            }
 
-			out_size = _size;
-			ty* ptr = _arr;
-			_arr = nullptr;
-			_capacity = 0;
-			_size = 0;
-			return ptr;
-		}
+            if (size_ != capacity_)
+            {
+                ty* new_arr = new ty[size_];
+                for (size_t i = 0; i < size_; ++i)
+                    new_arr[i] = std::move(arr_[i]);
 
-		ty* release(size_t& out_size, size_t& out_capacity)
-		{
-			out_size = _size;
-			out_capacity = _capacity;
-			ty* ptr = _arr;
-			_arr = nullptr;
-			_capacity = 0;
-			_size = 0;
-			return ptr;
-		}
+                delete[] arr_;
+                arr_ = new_arr;
+                capacity_ = size_;
+            }
 
-	private:
-		void reallocate()
-		{
-			reserve(resize_strategy.new_capacity(_capacity));
-		}
+            out_size = size_;
+            ty* ptr = arr_;
+            arr_ = nullptr;
+            capacity_ = 0;
+            size_ = 0;
+            return ptr;
+        }
 
-	public:
-		void reserve(size_t new_capacity)
-		{
-			if (new_capacity > _capacity)
-			{
-				ty* new_arr = new ty[new_capacity];
-				for (size_t i = 0; i < _size; ++i)
-					new_arr[i] = std::move(_arr[i]);
+        ty* release(size_t& out_size, size_t& out_capacity)
+        {
+            out_size = size_;
+            out_capacity = capacity_;
+            ty* ptr = arr_;
+            arr_ = nullptr;
+            capacity_ = 0;
+            size_ = 0;
+            return ptr;
+        }
 
-				delete[] _arr;
-				_arr = new_arr;
-				_capacity = new_capacity;
-			}
-		}
-	};
+    private:
+        void reallocate()
+        {
+            reserve(resize_strategy.new_capacity(capacity_));
+        }
+
+    public:
+        void reserve(size_t new_capacity)
+        {
+            if (new_capacity > capacity_)
+            {
+                ty* new_arr = new ty[new_capacity];
+                for (size_t i = 0; i < size_; ++i)
+                    new_arr[i] = std::move(arr_[i]);
+
+                delete[] arr_;
+                arr_ = new_arr;
+                capacity_ = new_capacity;
+            }
+        }
+    };
 }

@@ -35,7 +35,7 @@ namespace imp::utf
     static constexpr int CODEPOINT_B3_MAX = 0x0000'FFFF; // 0xFFFF   = 0b00000000'00000000'11111111'11111111
     static constexpr int CODEPOINT_B4_MAX = 0x0010'FFFF; // 0x10FFFF = 0b00000000'00010000'11111111'11111111
 
-    template<int bits> struct bytes { static_assert(imp::dependent_false_v<bits>); };
+    template<int bits> struct bytes { static_assert(imp::kDependentFalse<bits>); };
     template<>         struct bytes<8> { using type = char8_t; };
     template<>         struct bytes<16> { using type = char16_t; };
     template<>         struct bytes<32> { using type = char32_t; };

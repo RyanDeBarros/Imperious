@@ -3,5 +3,5 @@
 namespace imp
 {
 	template<auto>
-	inline constexpr bool dependent_false_v = false;
+	inline constexpr bool kDependentFalse = false;
 }

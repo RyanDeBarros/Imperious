@@ -7,15 +7,15 @@ namespace imp
     template<
         typename left_ty,
         typename right_ty,
-        typename left_hash    = std::hash<left_ty>,
-        typename right_hash   = std::hash<right_ty>,
-        typename left_equals  = std::equal_to<left_ty>,
+        typename left_hash = std::hash<left_ty>,
+        typename right_hash = std::hash<right_ty>,
+        typename left_equals = std::equal_to<left_ty>,
         typename right_equals = std::equal_to<right_ty>
     >
     class bijection
     {
-        std::unordered_map<left_ty, right_ty, left_hash, left_equals>   _lhs_map;
-        std::unordered_map<right_ty, left_ty, right_hash, right_equals> _rhs_map;
+        std::unordered_map<left_ty, right_ty, left_hash, left_equals> lhs_map_;
+        std::unordered_map<right_ty, left_ty, right_hash, right_equals> rhs_map_;
 
     public:
         bijection() = default;
@@ -23,6 +23,125 @@ namespace imp
         bijection(bijection&&) noexcept = default;
         bijection& operator=(const bijection&) = default;
         bijection& operator=(bijection&&) noexcept = default;
+
+    public:
+        void set(const left_ty& lhs, const right_ty& rhs)
+        {
+            auto forward_it = lhs_map_.find(lhs);
+            if (forward_it != lhs_map_.end())
+            {
+                if (right_equals{}(forward_it->second, rhs))
+                    return;
+                rhs_map_.erase(forward_it->second);
+            }
+
+            auto backward_it = rhs_map_.find(rhs);
+            if (backward_it != rhs_map_.end())
+            {
+                if (left_equals{}(backward_it->second, lhs))
+                    return;
+                lhs_map_.erase(backward_it->second);
+            }
+
+            map_insert(lhs_map_, lhs, rhs);
+            map_insert(rhs_map_, rhs, lhs);
+        }
+
+        void left_erase(const left_ty& lhs)
+        {
+            auto it = lhs_map_.find(lhs);
+            if (it != lhs_map_.end())
+            {
+                rhs_map_.erase(it->second);
+                lhs_map_.erase(it);
+            }
+        }
+
+        void left_erase(const typename decltype(lhs_map_)::const_iterator& where)
+        {
+            if (where != lhs_map_.end())
+            {
+                rhs_map_.erase(where->second);
+                lhs_map_.erase(where);
+            }
+        }
+
+        void right_erase(const right_ty& rhs)
+        {
+            auto it = rhs_map_.find(rhs);
+            if (it != rhs_map_.end())
+            {
+                lhs_map_.erase(it->second);
+                rhs_map_.erase(it);
+            }
+        }
+
+        void right_erase(const typename decltype(rhs_map_)::const_iterator& where)
+        {
+            if (where != rhs_map_.end())
+            {
+                lhs_map_.erase(where->second);
+                rhs_map_.erase(where);
+            }
+        }
+
+        void clear()
+        {
+            lhs_map_.clear();
+            rhs_map_.clear();
+        }
+
+        bool left_exists(const left_ty& lhs) const
+        {
+            return lhs_map_.count(lhs);
+        }
+
+        bool right_exists(const right_ty& rhs) const
+        {
+            return rhs_map_.count(rhs);
+        }
+
+        auto left_begin() const
+        {
+            return lhs_map_.begin();
+        }
+
+        auto right_begin() const
+        {
+            return rhs_map_.begin();
+        }
+
+        auto left_end() const
+        {
+            return lhs_map_.end();
+        }
+
+        auto right_end() const
+        {
+            return rhs_map_.end();
+        }
+
+        auto left_find(const left_ty& lhs) const
+        {
+            return lhs_map_.find(lhs);
+        }
+
+        auto right_find(const right_ty& rhs) const
+        {
+            return rhs_map_.find(rhs);
+        }
+
+        const right_ty* left_get(const left_ty& lhs) const
+        {
+            auto it = lhs_map_.find(lhs);
+            return it != lhs_map_.end() ? &it->second : nullptr;
+        }
+
+        const left_ty* right_get(const right_ty& rhs) const
+        {
+            auto it = rhs_map_.find(rhs);
+            return it != rhs_map_.end() ? &it->second : nullptr;
+        }
 
     private:
         template<typename map_ty, typename key_ty, typename value_ty>
@@ -37,125 +156,6 @@ namespace imp
                     map.erase(it);
                 map.emplace(std::forward<key_ty>(key), std::forward<value_ty>(value));
             }
-        }
-
-    public:
-        void set(const left_ty& lhs, const right_ty& rhs)
-        {
-            auto forward_it = _lhs_map.find(lhs);
-            if (forward_it != _lhs_map.end())
-            {
-                if (right_equals{}(forward_it->second, rhs))
-                    return;
-                _rhs_map.erase(forward_it->second);
-            }
-
-            auto backward_it = _rhs_map.find(rhs);
-            if (backward_it != _rhs_map.end())
-            {
-                if (left_equals{}(backward_it->second, lhs))
-                    return;
-                _lhs_map.erase(backward_it->second);
-            }
-
-            map_insert(_lhs_map, lhs, rhs);
-            map_insert(_rhs_map, rhs, lhs);
-        }
-
-        void left_erase(const left_ty& lhs)
-        {
-            auto it = _lhs_map.find(lhs);
-            if (it != _lhs_map.end())
-            {
-                _rhs_map.erase(it->second);
-                _lhs_map.erase(it);
-            }
-        }
-
-        void left_erase(const typename decltype(_lhs_map)::const_iterator& where)
-        {
-            if (where != _lhs_map.end())
-            {
-                _rhs_map.erase(where->second);
-                _lhs_map.erase(where);
-            }
-        }
-
-        void right_erase(const right_ty& rhs)
-        {
-            auto it = _rhs_map.find(rhs);
-            if (it != _rhs_map.end())
-            {
-                _lhs_map.erase(it->second);
-                _rhs_map.erase(it);
-            }
-        }
-
-        void right_erase(const typename decltype(_rhs_map)::const_iterator& where)
-        {
-            if (where != _rhs_map.end())
-            {
-                _lhs_map.erase(where->second);
-                _rhs_map.erase(where);
-            }
-        }
-
-        void clear()
-        {
-            _lhs_map.clear();
-            _rhs_map.clear();
-        }
-
-        bool left_exists(const left_ty& lhs) const
-        {
-            return _lhs_map.count(lhs);
-        }
-
-        bool right_exists(const right_ty& rhs) const
-        {
-            return _rhs_map.count(rhs);
-        }
-
-        auto left_begin() const
-        {
-            return _lhs_map.begin();
-        }
-
-        auto right_begin() const
-        {
-            return _rhs_map.begin();
-        }
-
-        auto left_end() const
-        {
-            return _lhs_map.end();
-        }
-
-        auto right_end() const
-        {
-            return _rhs_map.end();
-        }
-
-        auto left_find(const left_ty& lhs) const
-        {
-            return _lhs_map.find(lhs);
-        }
-
-        auto right_find(const right_ty& rhs) const
-        {
-            return _rhs_map.find(rhs);
-        }
-
-        const right_ty* left_get(const left_ty& lhs) const
-        {
-            auto it = _lhs_map.find(lhs);
-            return it != _lhs_map.end() ? &it->second : nullptr;
-        }
-
-        const left_ty* right_get(const right_ty& rhs) const
-        {
-            auto it = _rhs_map.find(rhs);
-            return it != _rhs_map.end() ? &it->second : nullptr;
         }
     };
 }
