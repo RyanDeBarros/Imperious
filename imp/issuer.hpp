@@ -10,6 +10,8 @@ namespace imp
         : public std::enable_shared_from_this<issuer<derived>>
     {
         using super = std::enable_shared_from_this<issuer<derived>>;
+
+    public:
         class ticket;
 
     protected:
