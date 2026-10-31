@@ -15,131 +15,131 @@ namespace imp
 
 #define _IMP_ENUM_DEF(N) _##N
 #define _IMP_TYPE_ENUM(N)\
-	public:\
-	enum class type\
-	{\
-		none,\
-		_IMP_REPEAT_COMMA(_IMP_ENUM_DEF, N)\
-	};\
-	private:\
-		type _type;
+    public:\
+    enum class type\
+    {\
+        none,\
+        _IMP_REPEAT_COMMA(_IMP_ENUM_DEF, N)\
+    };\
+    private:\
+        type type_;
 
 #define _IMP_STORAGE_DEF(N) ty_##N ty##N;
 #define _IMP_STORAGE(N) union storage\
-	{\
-		_IMP_REPEAT(_IMP_STORAGE_DEF, N)\
-		storage() {}\
-		~storage() {}\
-	} _storage;
+    {\
+        _IMP_REPEAT(_IMP_STORAGE_DEF, N)\
+        storage() {}\
+        ~storage() {}\
+    } storage_;
 
-#define _IMP_DEL_CASE(N) case type::_##N: _storage.ty##N.~ty_##N(); break;
+#define _IMP_DEL_CASE(N) case type::_##N: storage_.ty##N.~ty_##N(); break;
 #define _IMP_DEL(N)\
-	void del()\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_DEL_CASE, N);\
-		default: break;\
-		}\
-		_type = type::none;\
-	}
+    void del()\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_DEL_CASE, N);\
+        default: break;\
+        }\
+        type_ = type::none;\
+    }
 
-#define _IMP_COPY_CASE(N) case type::_##N: new (&_storage.ty##N) ty_##N(o._storage.ty##N); break;
+#define _IMP_COPY_CASE(N) case type::_##N: new (&storage_.ty##N) ty_##N(o.storage_.ty##N); break;
 #define _IMP_COPY_FROM(N)\
-	void copy_from(const variant& o)\
-	{\
-		_type = o._type;\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_COPY_CASE, N);\
-		default: break;\
-		}\
-	}
+    void copy_from(const variant& o)\
+    {\
+        type_ = o.type_;\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_COPY_CASE, N);\
+        default: break;\
+        }\
+    }
 
-#define _IMP_MOVE_CASE(N) case type::_##N: new (&_storage.ty##N) ty_##N(std::move(o._storage.ty##N)); break;
+#define _IMP_MOVE_CASE(N) case type::_##N: new (&storage_.ty##N) ty_##N(std::move(o.storage_.ty##N)); break;
 #define _IMP_MOVE_FROM(N)\
-	void move_from(variant&& o) noexcept\
-	{\
-		_type = o._type;\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_MOVE_CASE, N);\
-		default: break;\
-		}\
-		o._type = type::none;\
-	}
+    void move_from(variant&& o) noexcept\
+    {\
+        type_ = o.type_;\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_MOVE_CASE, N);\
+        default: break;\
+        }\
+        o.type_ = type::none;\
+    }
 
-#define _IMP_PTR_CASE(N) case type::_##N: return &_storage.ty##N;
+#define _IMP_PTR_CASE(N) case type::_##N: return &storage_.ty##N;
 #define _IMP_PTR(N)\
-	const void* ptr() const\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_PTR_CASE, N);\
-		default: return nullptr;\
-		}\
-	}\
-	void* ptr()\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_PTR_CASE, N);\
-		default: return nullptr;\
-		}\
-	}
+    const void* ptr() const\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_PTR_CASE, N);\
+        default: return nullptr;\
+        }\
+    }\
+    void* ptr()\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_PTR_CASE, N);\
+        default: return nullptr;\
+        }\
+    }
 
 #define _IMP_VALUE_CTOR(N)\
-	variant(const ty_##N& ty##N)\
-		: _type(type::_##N)\
-	{\
-		new (&_storage.ty##N) ty_##N(ty##N);\
-	}\
-	variant(ty_##N&& ty##N) noexcept\
-		: _type(type::_##N)\
-	{\
-		new (&_storage.ty##N) ty_##N(std::move(ty##N));\
-	}\
-	variant& operator=(const ty_##N& ty##N)\
-	{\
-		if (_type == type::_##N)\
-			_storage.ty##N = ty##N;\
-		else\
-		{\
-			del();\
-			_type = type::_##N;\
-			new (&_storage.ty##N) ty_##N(ty##N);\
-		}\
-		return *this;\
-	}\
-	variant& operator=(ty_##N&& ty##N) noexcept\
-	{\
-		if (_type == type::_##N)\
-			_storage.ty##N = std::move(ty##N);\
-		else\
-		{\
-			del();\
-			_type = type::_##N;\
-			new (&_storage.ty##N) ty_##N(std::move(ty##N));\
-		}\
-		return *this;\
-	}
+    variant(const ty_##N& ty##N)\
+        : type_(type::_##N)\
+    {\
+        new (&storage_.ty##N) ty_##N(ty##N);\
+    }\
+    variant(ty_##N&& ty##N) noexcept\
+        : type_(type::_##N)\
+    {\
+        new (&storage_.ty##N) ty_##N(std::move(ty##N));\
+    }\
+    variant& operator=(const ty_##N& ty##N)\
+    {\
+        if (type_ == type::_##N)\
+            storage_.ty##N = ty##N;\
+        else\
+        {\
+            del();\
+            type_ = type::_##N;\
+            new (&storage_.ty##N) ty_##N(ty##N);\
+        }\
+        return *this;\
+    }\
+    variant& operator=(ty_##N&& ty##N) noexcept\
+    {\
+        if (type_ == type::_##N)\
+            storage_.ty##N = std::move(ty##N);\
+        else\
+        {\
+            del();\
+            type_ = type::_##N;\
+            new (&storage_.ty##N) ty_##N(std::move(ty##N));\
+        }\
+        return *this;\
+    }
 
 #define _IMP_CTOR(N)\
-	variant() : _type(type::none) {}\
-	_IMP_REPEAT(_IMP_VALUE_CTOR, N)\
-	variant(const variant& o)\
+    variant() : type_(type::none) {}\
+    _IMP_REPEAT(_IMP_VALUE_CTOR, N)\
+    variant(const variant& o)\
     {\
         copy_from(o);\
     }\
-	variant(variant&& o) noexcept\
+    variant(variant&& o) noexcept\
     {\
         move_from(std::move(o));\
     }\
-	~variant()\
+    ~variant()\
     {\
         del();\
     }\
-	variant& operator=(const variant& o)\
+    variant& operator=(const variant& o)\
     {\
         if (this != &o)\
         {\
@@ -148,7 +148,7 @@ namespace imp
         }\
         return *this;\
     }\
-	variant& operator=(variant&& o) noexcept\
+    variant& operator=(variant&& o) noexcept\
     {\
         if (this != &o)\
         {\
@@ -158,121 +158,121 @@ namespace imp
         return *this;\
     }
 
-#define _IMP_HOLDS_CHECK(N) if constexpr (std::is_same_v<ty_, ty_##N>) return _type == type::_##N;
+#define _IMP_HOLDS_CHECK(N) if constexpr (std::is_same_v<ty_, ty_##N>) return type_ == type::_##N;
 #define _IMP_HOLDS(N)\
-	template<typename ty_>\
-	bool holds() const\
-	{\
-		_IMP_REPEAT(_IMP_HOLDS_CHECK, N);\
-		return false;\
-	}
+    template<typename ty_>\
+    bool holds() const\
+    {\
+        _IMP_REPEAT(_IMP_HOLDS_CHECK, N);\
+        return false;\
+    }
 
 #define _IMP_GET(N)\
-	template<typename ty_>\
-	const ty_& get() const\
-	{\
-		if (holds<ty_>())\
-			return *reinterpret_cast<const ty_*>(ptr());\
-		else\
-			throw std::bad_variant_access(); /* TODO imp error ? */\
-	}\
-	template<typename ty_>\
-	ty_& get()\
-	{\
-		if (holds<ty_>())\
-			return *reinterpret_cast<ty_*>(ptr());\
-		else\
-			throw std::bad_variant_access(); /* TODO imp error ? */\
-	}\
-	template<typename ty_>\
-	const ty_* safe_get() const\
-	{\
-		if (holds<ty_>())\
-			return reinterpret_cast<const ty_*>(ptr());\
-		else\
-			return nullptr;\
-	}\
-	template<typename ty_>\
-	ty_* safe_get()\
-	{\
-		if (holds<ty_>())\
-			return reinterpret_cast<ty_*>(ptr());\
-		else\
-			return nullptr;\
-	}
+    template<typename ty_>\
+    const ty_& get() const\
+    {\
+        if (holds<ty_>())\
+            return *reinterpret_cast<const ty_*>(ptr());\
+        else\
+            throw std::bad_variant_access(); /* TODO imp error ? */\
+    }\
+    template<typename ty_>\
+    ty_& get()\
+    {\
+        if (holds<ty_>())\
+            return *reinterpret_cast<ty_*>(ptr());\
+        else\
+            throw std::bad_variant_access(); /* TODO imp error ? */\
+    }\
+    template<typename ty_>\
+    const ty_* safe_get() const\
+    {\
+        if (holds<ty_>())\
+            return reinterpret_cast<const ty_*>(ptr());\
+        else\
+            return nullptr;\
+    }\
+    template<typename ty_>\
+    ty_* safe_get()\
+    {\
+        if (holds<ty_>())\
+            return reinterpret_cast<ty_*>(ptr());\
+        else\
+            return nullptr;\
+    }
 
-#define _IMP_INVOKE_CASE(N) case type::_##N: return std::invoke(std::forward<fn_##N>(fn##N), _storage.ty##N);
-#define _IMP_VISIT_SINGLE_CASE(N) case type::_##N: return std::invoke(std::forward<fn_>(fn), _storage.ty##N);
+#define _IMP_INVOKE_CASE(N) case type::_##N: return std::invoke(std::forward<fn_##N>(fn##N), storage_.ty##N);
+#define _IMP_VISIT_SINGLE_CASE(N) case type::_##N: return std::invoke(std::forward<fn_>(fn), storage_.ty##N);
 #define _IMP_TYPENAME_FN(N) typename fn_##N
 #define _IMP_VISIT_ARG(N) fn_##N&& fn##N
 #define _IMP_VISIT(N)\
-	template<_IMP_REPEAT_COMMA(_IMP_TYPENAME_FN, N)>\
-	decltype(auto) visit(_IMP_REPEAT_COMMA(_IMP_VISIT_ARG, N)) const\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_INVOKE_CASE, N);\
-		default: throw std::bad_variant_access(); /* TODO imp error ? */\
-		}\
-	}\
-	template<_IMP_REPEAT_COMMA(_IMP_TYPENAME_FN, N)>\
-	decltype(auto) visit(_IMP_REPEAT_COMMA(_IMP_VISIT_ARG, N))\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_INVOKE_CASE, N);\
-		default: throw std::bad_variant_access(); /* TODO imp error ? */\
-		}\
-	}\
-	template<typename fn_>\
-	decltype(auto) visit(fn_&& fn) const\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_VISIT_SINGLE_CASE, N);\
-		default: throw std::bad_variant_access(); /* TODO imp error ? */\
-		}\
-	}\
-	template<typename fn_>\
-	decltype(auto) visit(fn_&& fn)\
-	{\
-		switch (_type)\
-		{\
-			_IMP_REPEAT(_IMP_VISIT_SINGLE_CASE, N);\
-		default: throw std::bad_variant_access(); /* TODO imp error ? */\
-		}\
-	}
+    template<_IMP_REPEAT_COMMA(_IMP_TYPENAME_FN, N)>\
+    decltype(auto) visit(_IMP_REPEAT_COMMA(_IMP_VISIT_ARG, N)) const\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_INVOKE_CASE, N);\
+        default: throw std::bad_variant_access(); /* TODO imp error ? */\
+        }\
+    }\
+    template<_IMP_REPEAT_COMMA(_IMP_TYPENAME_FN, N)>\
+    decltype(auto) visit(_IMP_REPEAT_COMMA(_IMP_VISIT_ARG, N))\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_INVOKE_CASE, N);\
+        default: throw std::bad_variant_access(); /* TODO imp error ? */\
+        }\
+    }\
+    template<typename fn_>\
+    decltype(auto) visit(fn_&& fn) const\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_VISIT_SINGLE_CASE, N);\
+        default: throw std::bad_variant_access(); /* TODO imp error ? */\
+        }\
+    }\
+    template<typename fn_>\
+    decltype(auto) visit(fn_&& fn)\
+    {\
+        switch (type_)\
+        {\
+            _IMP_REPEAT(_IMP_VISIT_SINGLE_CASE, N);\
+        default: throw std::bad_variant_access(); /* TODO imp error ? */\
+        }\
+    }
 
 #define _IMP_TYPE_OF_CASE(N) if constexpr (std::is_same_v<ty_, ty_##N>) return type::_##N;
 #define _IMP_GET_TYPE(N)\
-	type get_type() const { return _type; }\
-	template<typename ty_>\
-	static constexpr type type_of()\
-	{\
-		_IMP_REPEAT(_IMP_TYPE_OF_CASE, N);\
-		static_assert(imp::kDependentFalse<ty_>);\
-	}
+    type get_type() const { return type_; }\
+    template<typename ty_>\
+    static constexpr type type_of()\
+    {\
+        _IMP_REPEAT(_IMP_TYPE_OF_CASE, N);\
+        static_assert(imp::kDependentFalse<ty_>);\
+    }
 
 #define _IMP_TYPENAME_TY(N) typename ty_##N
 #define _IMP_TYPE_PARAMETER(N) ty_##N
 #define _IMP_VARIANT(N)\
-	template<_IMP_REPEAT_COMMA(_IMP_TYPENAME_TY, N)>\
-	class variant<_IMP_REPEAT_COMMA(_IMP_TYPE_PARAMETER, N)>\
-	{\
-		_IMP_TYPE_ENUM(N);\
-		_IMP_STORAGE(N);\
-		_IMP_DEL(N);\
-		_IMP_COPY_FROM(N);\
-		_IMP_MOVE_FROM(N);\
-		_IMP_PTR(N);\
-	public:\
-		_IMP_CTOR(N);\
-		_IMP_HOLDS(N);\
-		bool empty() const { return _type == type::none; }\
-		_IMP_GET(N);\
-		_IMP_VISIT(N);\
-		_IMP_GET_TYPE(N);\
-	};
+    template<_IMP_REPEAT_COMMA(_IMP_TYPENAME_TY, N)>\
+    class variant<_IMP_REPEAT_COMMA(_IMP_TYPE_PARAMETER, N)>\
+    {\
+        _IMP_TYPE_ENUM(N);\
+        _IMP_STORAGE(N);\
+        _IMP_DEL(N);\
+        _IMP_COPY_FROM(N);\
+        _IMP_MOVE_FROM(N);\
+        _IMP_PTR(N);\
+    public:\
+        _IMP_CTOR(N);\
+        _IMP_HOLDS(N);\
+        bool empty() const { return type_ == type::none; }\
+        _IMP_GET(N);\
+        _IMP_VISIT(N);\
+        _IMP_GET_TYPE(N);\
+    };
 
     // ###########################################################################
     _IMP_VARIANT(2);

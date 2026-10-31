@@ -7,7 +7,8 @@ namespace imp
     template<typename ty>
     struct swapper
     {
-        ty front, back;
+        ty front;
+        ty back;
 
         swapper& swap()
         {
@@ -19,19 +20,22 @@ namespace imp
     template<typename ty>
     class mut_swapper
     {
-        ty front_, back_;
+        ty front_;
+        ty back_;
         mutable bool switch_ = true;
 
     public:
         mut_swapper() = default;
 
         explicit mut_swapper(ty element)
-            : front_(element), back_(std::move(element))
+            : front_(element)
+            , back_(std::move(element))
         {
         }
 
         mut_swapper(ty front, ty back)
-            : front_(std::move(front)), back_(std::move(back))
+            : front_(std::move(front))
+            , back_(std::move(back))
         {
         }
 

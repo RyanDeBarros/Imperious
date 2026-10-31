@@ -9,30 +9,35 @@ namespace imp
     template<typename derived>
     class tree_node
     {
-        tree_node* _parent = nullptr;
-        tree_node* _left_sibling = nullptr;
-        tree_node* _right_sibling = nullptr;
-        tree_node* _children_root = nullptr;
-        size_t _children_size = 0;
+        tree_node* parent_ = nullptr;
+        tree_node* left_sibling_ = nullptr;
+        tree_node* right_sibling_ = nullptr;
+        tree_node* children_root_ = nullptr;
+        size_t children_size_ = 0;
 
     public:
         tree_node() = default;
 
         tree_node(const tree_node&) = delete;
 
-        tree_node(tree_node&& other) noexcept
-            : _parent(other._parent), _left_sibling(other._left_sibling), _right_sibling(other._right_sibling), _children_root(other._children_root), _children_size(other._children_size)
+        tree_node(tree_node&& o) noexcept
+            : parent_(o.parent_)
+            , left_sibling_(o.left_sibling_)
+            , right_sibling_(o.right_sibling_)
+            , children_root_(o.children_root_)
+            , children_size_(o.children_size_)
         {
-            other._parent = nullptr;
-            other._left_sibling = nullptr;
-            other._right_sibling = nullptr;
-            other._children_root = nullptr;
-            other._children_size = 0;
+            o.parent_ = nullptr;
+            o.left_sibling_ = nullptr;
+            o.right_sibling_ = nullptr;
+            o.children_root_ = nullptr;
+            o.children_size_ = 0;
 
-            if (_left_sibling)
-                _left_sibling->_right_sibling = this;
-            if (_right_sibling)
-                _right_sibling->_left_sibling = this;
+            if (left_sibling_)
+                left_sibling_->right_sibling_ = this;
+
+            if (right_sibling_)
+                right_sibling_->left_sibling_ = this;
 
             set_parent_of_children(this);
         }
@@ -45,29 +50,30 @@ namespace imp
 
         tree_node& operator=(const tree_node&) = delete;
 
-        tree_node& operator=(tree_node&& other) noexcept
+        tree_node& operator=(tree_node&& o) noexcept
         {
-            if (this != &other)
+            if (this != &o)
             {
                 detach();
                 set_parent_of_children(nullptr);
 
-                _parent = other._parent;
-                _left_sibling = other._left_sibling;
-                _right_sibling = other._right_sibling;
-                _children_root = other._children_root;
-                _children_size = other._children_size;
+                parent_ = o.parent_;
+                left_sibling_ = o.left_sibling_;
+                right_sibling_ = o.right_sibling_;
+                children_root_ = o.children_root_;
+                children_size_ = o.children_size_;
 
-                other._parent = nullptr;
-                other._left_sibling = nullptr;
-                other._right_sibling = nullptr;
-                other._children_root = nullptr;
-                other._children_size = 0;
+                o.parent_ = nullptr;
+                o.left_sibling_ = nullptr;
+                o.right_sibling_ = nullptr;
+                o.children_root_ = nullptr;
+                o.children_size_ = 0;
 
-                if (_left_sibling)
-                    _left_sibling->_right_sibling = this;
-                if (_right_sibling)
-                    _right_sibling->_left_sibling = this;
+                if (left_sibling_)
+                    left_sibling_->right_sibling_ = this;
+
+                if (right_sibling_)
+                    right_sibling_->left_sibling_ = this;
 
                 set_parent_of_children(this);
             }
@@ -77,14 +83,14 @@ namespace imp
     private:
         void set_parent_of_children(tree_node* parent)
         {
-            if (_children_root)
+            if (children_root_)
             {
-                _children_root->_parent = parent;
-                tree_node* sibling = _children_root->_right_sibling;
-                while (sibling != _children_root)
+                children_root_->parent_ = parent;
+                tree_node* sibling = children_root_->right_sibling_;
+                while (sibling != children_root_)
                 {
-                    sibling->_parent = parent;
-                    sibling = sibling->_right_sibling;
+                    sibling->parent_ = parent;
+                    sibling = sibling->right_sibling_;
                 }
             }
         }
@@ -95,182 +101,182 @@ namespace imp
     private:
         void on_attach_call(tree_node* old_parent)
         {
-            on_attach(static_cast<derived*>(old_parent), static_cast<derived*>(_parent));
+            on_attach(static_cast<derived*>(old_parent), static_cast<derived*>(parent_));
         }
 
     public:
         void attach(derived* parent)
         {
-            if (_parent == parent)
+            if (parent_ == parent)
                 return;
 
             detach();
-            tree_node* old_parent = _parent;
-            _parent = parent;
-            if (!_parent)
+            tree_node* old_parent = parent_;
+            parent_ = parent;
+            if (!parent_)
                 return;
 
-            if (_parent->_children_root)
+            if (parent_->children_root_)
             {
-                tree_node* last = _parent->_children_root->_left_sibling;
+                tree_node* last = parent_->children_root_->left_sibling_;
                 if (!last)
-                    last = _parent->_children_root;
+                    last = parent_->children_root_;
 
-                last->_right_sibling = this;
-                _left_sibling = last;
-                _parent->_children_root->_left_sibling = this;
-                _right_sibling = _parent->_children_root;
+                last->right_sibling_ = this;
+                left_sibling_ = last;
+                parent_->children_root_->left_sibling_ = this;
+                right_sibling_ = parent_->children_root_;
             }
             else
-                _parent->_children_root = this;
+                parent_->children_root_ = this;
 
-            ++_parent->_children_size;
+            ++parent_->children_size_;
             on_attach_call(old_parent);
         }
 
         void attach_right(derived& left_sibling)
         {
             if (this == &left_sibling)
-                throw std::logic_error("imp::tree_node: circular reference"); // TODO imp error ?
+                throw std::logic_error("circular reference"); // TODO imp error ?
 
-            if (_parent == left_sibling._parent)
+            if (parent_ == left_sibling.parent_)
             {
-                swap_with_sibling(*left_sibling._right_sibling);
+                swap_with_sibling(*left_sibling.right_sibling_);
                 return;
             }
 
             detach();
-            tree_node* old_parent = _parent;
-            _parent = left_sibling._parent;
-            if (!_parent)
+            tree_node* old_parent = parent_;
+            parent_ = left_sibling.parent_;
+            if (!parent_)
                 return;
 
-            tree_node* right_sibling = left_sibling._right_sibling;
+            tree_node* right_sibling = left_sibling.right_sibling_;
             if (!right_sibling)
                 right_sibling = &left_sibling;
 
-            left_sibling._right_sibling = this;
-            _left_sibling = &left_sibling;
-            right_sibling->_left_sibling = this;
-            _right_sibling = right_sibling;
+            left_sibling.right_sibling_ = this;
+            left_sibling_ = &left_sibling;
+            right_sibling->left_sibling_ = this;
+            right_sibling_ = right_sibling;
 
-            ++_parent->_children_size;
+            ++parent_->children_size_;
             on_attach_call(old_parent);
         }
 
         void attach_left(derived& right_sibling)
         {
             if (this == &right_sibling)
-                throw std::logic_error("imp::tree_node: circular reference"); // TODO imp error ?
+                throw std::logic_error("circular reference"); // TODO imp error ?
 
-            if (_parent == right_sibling._parent)
+            if (parent_ == right_sibling.parent_)
             {
-                swap_with_sibling(*right_sibling._left_sibling);
+                swap_with_sibling(*right_sibling.left_sibling_);
                 return;
             }
 
             detach();
-            tree_node* old_parent = _parent;
-            _parent = right_sibling._parent;
-            if (!_parent)
+            tree_node* old_parent = parent_;
+            parent_ = right_sibling.parent_;
+            if (!parent_)
                 return;
 
-            tree_node* left_sibling = right_sibling._left_sibling;
+            tree_node* left_sibling = right_sibling.left_sibling_;
             if (!left_sibling)
                 left_sibling = &right_sibling;
 
-            right_sibling._left_sibling = this;
-            _right_sibling = &right_sibling;
-            left_sibling->_right_sibling = this;
-            _left_sibling = left_sibling;
+            right_sibling.left_sibling_ = this;
+            right_sibling_ = &right_sibling;
+            left_sibling->right_sibling_ = this;
+            left_sibling_ = left_sibling;
 
-            if (_parent->_children_root == &right_sibling)
-                _parent->_children_root = this;
+            if (parent_->children_root_ == &right_sibling)
+                parent_->children_root_ = this;
 
-            ++_parent->_children_size;
+            ++parent_->children_size_;
             on_attach_call(old_parent);
         }
 
         void detach()
         {
-            if (!_parent)
+            if (!parent_)
                 return;
 
-            if (_parent->_children_root == this)
-                _parent->_children_root = _right_sibling;
+            if (parent_->children_root_ == this)
+                parent_->children_root_ = right_sibling_;
 
-            if (_left_sibling)
+            if (left_sibling_)
             {
-                if (_left_sibling == _right_sibling)
+                if (left_sibling_ == right_sibling_)
                 {
-                    _left_sibling->_right_sibling = nullptr;
-                    _right_sibling->_left_sibling = nullptr;
+                    left_sibling_->right_sibling_ = nullptr;
+                    right_sibling_->left_sibling_ = nullptr;
                 }
                 else
                 {
-                    _left_sibling->_right_sibling = _right_sibling;
-                    _right_sibling->_left_sibling = _left_sibling;
+                    left_sibling_->right_sibling_ = right_sibling_;
+                    right_sibling_->left_sibling_ = left_sibling_;
                 }
 
-                _left_sibling = nullptr;
-                _right_sibling = nullptr;
+                left_sibling_ = nullptr;
+                right_sibling_ = nullptr;
             }
 
-            --_parent->_children_size;
+            --parent_->children_size_;
 
-            tree_node* old_parent = _parent;
-            _parent = nullptr;
+            tree_node* old_parent = parent_;
+            parent_ = nullptr;
             on_attach_call(old_parent);
         }
 
         void clear_children()
         {
-            if (!_children_root)
+            if (!children_root_)
                 return;
 
-            tree_node* sibling = _children_root->_right_sibling;
+            tree_node* sibling = children_root_->right_sibling_;
 
-            _children_root->_parent = nullptr;
-            _children_root->on_attach_call(this);
-            _children_root->_left_sibling = nullptr;
-            _children_root->_right_sibling = nullptr;
+            children_root_->parent_ = nullptr;
+            children_root_->on_attach_call(this);
+            children_root_->left_sibling_ = nullptr;
+            children_root_->right_sibling_ = nullptr;
 
-            while (sibling && sibling != _children_root)
+            while (sibling && sibling != children_root_)
             {
                 tree_node* old = sibling;
-                sibling = sibling->_right_sibling;
+                sibling = sibling->right_sibling_;
 
-                old->_parent = nullptr;
+                old->parent_ = nullptr;
                 old->on_attach_call(this);
-                old->_left_sibling = nullptr;
-                old->_right_sibling = nullptr;
+                old->left_sibling_ = nullptr;
+                old->right_sibling_ = nullptr;
             }
-            _children_root = nullptr;
-            _children_size = 0;
+            children_root_ = nullptr;
+            children_size_ = 0;
         }
 
         size_t children_size() const
         {
-            return _children_size;
+            return children_size_;
         }
 
         bool sibling_comes_before(const tree_node& sibling) const
         {
-            if (this == &sibling || _parent == nullptr || _parent != sibling._parent)
+            if (this == &sibling || parent_ == nullptr || parent_ != sibling.parent_)
                 return false;
 
-            if (this == _parent->_children_root)
+            if (this == parent_->children_root_)
                 return true;
-            else if (&sibling == _parent->_children_root)
+            else if (&sibling == parent_->children_root_)
                 return false;
             else
             {
-                const tree_node* checker = _left_sibling;
-                while (checker != _parent->_children_root)
+                const tree_node* checker = left_sibling_;
+                while (checker != parent_->children_root_)
                 {
                     if (checker == &sibling)
                         return false;
-                    checker = checker->_left_sibling;
+                    checker = checker->left_sibling_;
                 }
                 return true;
             }
@@ -278,21 +284,21 @@ namespace imp
 
         bool sibling_comes_after(const tree_node& sibling) const
         {
-            if (this == &sibling || _parent == nullptr || _parent != sibling._parent)
+            if (this == &sibling || parent_ == nullptr || parent_ != sibling.parent_)
                 return false;
 
-            if (this == _parent->_children_root)
+            if (this == parent_->children_root_)
                 return false;
-            else if (&sibling == _parent->_children_root)
+            else if (&sibling == parent_->children_root_)
                 return true;
             else
             {
-                const tree_node* checker = _left_sibling;
-                while (checker != _parent->_children_root)
+                const tree_node* checker = left_sibling_;
+                while (checker != parent_->children_root_)
                 {
                     if (checker == &sibling)
                         return true;
-                    checker = checker->_left_sibling;
+                    checker = checker->left_sibling_;
                 }
                 return false;
             }
@@ -300,99 +306,102 @@ namespace imp
 
         void swap_with_sibling(tree_node& sibling)
         {
-            if (this == &sibling || !_parent || _parent != sibling._parent)
+            if (this == &sibling || !parent_ || parent_ != sibling.parent_)
                 return;
 
-            if (_parent->_children_root == this)
-                _parent->_children_root = &sibling;
-            else if (_parent->_children_root == &sibling)
-                _parent->_children_root = this;
+            if (parent_->children_root_ == this)
+                parent_->children_root_ = &sibling;
+            else if (parent_->children_root_ == &sibling)
+                parent_->children_root_ = this;
 
-            if (&sibling == _left_sibling)
+            if (&sibling == left_sibling_)
             {
-                if (&sibling != _right_sibling)
+                if (&sibling != right_sibling_)
                 {
                     // We are not the only children of parent
-                    sibling._right_sibling = _right_sibling;
-                    _left_sibling = sibling._left_sibling;
-                    sibling._left_sibling = this;
-                    _right_sibling = &sibling;
+                    sibling.right_sibling_ = right_sibling_;
+                    left_sibling_ = sibling.left_sibling_;
+                    sibling.left_sibling_ = this;
+                    right_sibling_ = &sibling;
                 }
             }
-            else if (&sibling == _right_sibling)
+            else if (&sibling == right_sibling_)
             {
-                sibling._left_sibling = _left_sibling;
-                _right_sibling = sibling._right_sibling;
-                sibling._right_sibling = this;
-                _left_sibling = &sibling;
+                sibling.left_sibling_ = left_sibling_;
+                right_sibling_ = sibling.right_sibling_;
+                sibling.right_sibling_ = this;
+                left_sibling_ = &sibling;
             }
             else
             {
-                tree_node* my_left = _left_sibling;
-                tree_node* my_right = _right_sibling;
-                tree_node* their_left = sibling._left_sibling;
-                tree_node* their_right = sibling._right_sibling;
+                tree_node* my_left = left_sibling_;
+                tree_node* my_right = right_sibling_;
+                tree_node* their_left = sibling.left_sibling_;
+                tree_node* their_right = sibling.right_sibling_;
 
-                _left_sibling = their_left;
-                _right_sibling = their_right;
-                sibling._left_sibling = my_left;
-                sibling._right_sibling = my_right;
+                left_sibling_ = their_left;
+                right_sibling_ = their_right;
+                sibling.left_sibling_ = my_left;
+                sibling.right_sibling_ = my_right;
             }
         }
 
         const derived* get_parent() const
         {
-            return static_cast<const derived*>(_parent);
+            return static_cast<const derived*>(parent_);
         }
 
         derived* get_parent()
         {
-            return static_cast<derived*>(_parent);
+            return static_cast<derived*>(parent_);
         }
 
         const derived* get_left_sibling() const
         {
-            return static_cast<const derived*>(_left_sibling);
+            return static_cast<const derived*>(left_sibling_);
         }
 
         derived* get_left_sibling()
         {
-            return static_cast<derived*>(_left_sibling);
+            return static_cast<derived*>(left_sibling_);
         }
 
         const derived* get_right_sibling() const
         {
-            return static_cast<const derived*>(_right_sibling);
+            return static_cast<const derived*>(right_sibling_);
         }
 
         derived* get_right_sibling()
         {
-            return static_cast<derived*>(_right_sibling);
+            return static_cast<derived*>(right_sibling_);
         }
 
-        // This method can be slow. It's recommended to manipulate the order of nodes by using attach_left()/attach_right()/move_left()/move_right()/swap_sibling()
+        // This method can be slow. It's recommended to manipulate the order of nodes by using
+        // attach_left()/attach_right()/move_left()/move_right()/swap_sibling()
         size_t get_position_in_parent() const
         {
-            if (!_parent)
-                throw std::runtime_error("imp::tree_node: null pointer"); // TODO imp error ?
+            if (!parent_)
+                throw std::runtime_error("null pointer"); // TODO imp error ?
 
             size_t index = 0;
             tree_node* distance = this;
-            while (distance != _parent->_children_root)
+            while (distance != parent_->children_root_)
             {
                 ++index;
-                distance = distance->_left_sibling;
+                distance = distance->left_sibling_;
             }
+
             return index;
         }
 
-        // This method can be slow. It's recommended to manipulate the order of nodes by using attach_left()/attach_right()/move_left()/move_right()/swap_sibling()
+        // This method can be slow. It's recommended to manipulate the order of nodes by using
+        // attach_left()/attach_right()/move_left()/move_right()/swap_sibling()
         void set_position_in_parent(size_t index)
         {
-            if (!_parent)
-                throw std::runtime_error("imp::tree_node: null pointer"); // TODO imp error ?
+            if (!parent_)
+                throw std::runtime_error("null pointer"); // TODO imp error ?
 
-            if (index >= _parent->_children_size)
+            if (index >= parent_->children_size_)
                 throw std::out_of_range(); // TODO imp error ?
 
             size_t current_index = get_position_in_parent();
@@ -404,7 +413,7 @@ namespace imp
                 while (current_index < index)
                 {
                     ++current_index;
-                    swap_with_sibling(_right_sibling);
+                    swap_with_sibling(right_sibling_);
                 }
             }
             else
@@ -412,19 +421,26 @@ namespace imp
                 while (current_index > index)
                 {
                     ++index;
-                    swap_with_sibling(_left_sibling);
+                    swap_with_sibling(left_sibling_);
                 }
             }
         }
 
         class iterator
         {
-            const tree_node* node;
-            tree_node* child;
-
             friend class tree_node;
             friend class const_iterator;
-            iterator(const tree_node* node, tree_node* child) : node(node), child(child) {}
+
+        private:
+            const tree_node* node_;
+            tree_node* child_;
+
+        private:
+            iterator(const tree_node* node, tree_node* child)
+                : node_(node)
+                , child_(child)
+            {
+            }
 
         public:
             iterator(const iterator&) = default;
@@ -432,112 +448,165 @@ namespace imp
             iterator& operator=(const iterator&) = default;
             iterator& operator=(iterator&&) = default;
 
+            bool operator==(const iterator&) const = default;
+            bool operator!=(const iterator&) const = default;
+
             const derived& operator*() const
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
-                return *static_cast<const derived*>(child);
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
+
+                return *static_cast<const derived*>(child_);
             }
 
             derived& operator*()
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
-                return *static_cast<derived*>(child);
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
+
+                return *static_cast<derived*>(child_);
             }
 
             const derived* operator->() const
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
-                return static_cast<const derived*>(child);
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
+
+                return static_cast<const derived*>(child_);
             }
 
             derived* operator->()
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
-                return static_cast<derived*>(child);
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
+
+                return static_cast<derived*>(child_);
             }
 
             iterator& operator++()
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
 
-                tree_node* next = child->_right_sibling;
-                if (next != node->_children_root)
-                    child = next;
+                tree_node* next = child_->right_sibling_;
+                if (next != node_->children_root_)
+                    child_ = next;
                 else
-                    child = nullptr;
+                    child_ = nullptr;
 
                 return *this;
             }
 
-            iterator operator++(int) { iterator it(*this); ++*this; return it; }
-
-            bool operator==(const iterator&) const = default;
-            bool operator!=(const iterator&) const = default;
+            iterator operator++(int)
+            {
+                iterator it(*this);
+                ++*this;
+                return it;
+            }
         };
 
         class const_iterator
         {
-            const tree_node* node;
-            const tree_node* child;
-
             friend class tree_node;
-            const_iterator(const tree_node* node, const tree_node* child) : node(node), child(child) {}
+
+        private:
+            const tree_node* node_;
+            const tree_node* child_;
+
+        private:
+            const_iterator(const tree_node* node, const tree_node* child)
+                : node_(node)
+                , child_(child)
+            {
+            }
 
         public:
-            const_iterator(const iterator& it) : node(it.node), child(it.child) {}
-            const_iterator(iterator&& it) noexcept : node(it.node), child(it.child) {}
+            const_iterator(const iterator& it)
+                : node_(it.node_)
+                , child_(it.child_)
+            {
+            }
+            
+            const_iterator(iterator&& it) noexcept
+                : node_(it.node_)
+                , child_(it.child_)
+            {
+            }
 
             const_iterator(const const_iterator&) = default;
             const_iterator(const_iterator&&) = default;
             const_iterator& operator=(const const_iterator&) = default;
             const_iterator& operator=(const_iterator&&) = default;
 
+            bool operator==(const const_iterator&) const = default;
+            bool operator!=(const const_iterator&) const = default;
+
             const derived& operator*() const
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
 
-                return *static_cast<const derived*>(child);
+                return *static_cast<const derived*>(child_);
             }
 
             const derived* operator->() const
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
 
-                return static_cast<const derived*>(child);
+                return static_cast<const derived*>(child_);
             }
 
             const_iterator& operator++()
             {
-                if (!child)
-                    throw std::logic_error("imp::tree_node: invalid iterator"); // TODO imp error ?
+                if (!child_)
+                    throw std::logic_error("invalid iterator"); // TODO imp error ?
 
-                const tree_node* next = child->_right_sibling;
-                if (next != node->_children_root)
-                    child = next;
+                const tree_node* next = child_->right_sibling_;
+                if (next != node_->children_root_)
+                    child_ = next;
                 else
-                    child = nullptr;
+                    child_ = nullptr;
 
                 return *this;
             }
 
-            const_iterator operator++(int) { const_iterator it(*this); ++*this; return it; }
-
-            bool operator==(const const_iterator&) const = default;
-            bool operator!=(const const_iterator&) const = default;
+            const_iterator operator++(int)
+            {
+                const_iterator it(*this);
+                ++*this;
+                return it;
+            }
         };
 
-        iterator begin() { return iterator(this, _children_root); }
-        iterator end() { return iterator(this, nullptr); }
-        const_iterator cbegin() const { return const_iterator(this, _children_root); }
-        const_iterator cend() const { return const_iterator(this, nullptr); }
-        const_iterator begin() const { return const_iterator(this, _children_root); }
-        const_iterator end() const { return const_iterator(this, nullptr); }
+        iterator begin()
+        {
+            return iterator(this, children_root_);
+        }
+
+        iterator end()
+        {
+            return iterator(this, nullptr);
+        }
+
+        const_iterator cbegin() const
+        {
+            return const_iterator(this, children_root_);
+        }
+
+        const_iterator cend() const
+        {
+            return const_iterator(this, nullptr);
+        }
+
+        const_iterator begin() const
+        {
+            return const_iterator(this, children_root_);
+        }
+
+        const_iterator end() const
+        {
+            return const_iterator(this, nullptr);
+        }
     };
 }

@@ -39,12 +39,13 @@ namespace imp
 
     struct type_erasure
     {
-    private:
-        std::uint64_t _uid;
-
         template<typename ty>
         friend constexpr type_erasure erase_type() noexcept;
 
+    private:
+        std::uint64_t _uid;
+
+    private:
         constexpr explicit type_erasure(std::uint64_t uid) noexcept
             : _uid(uid)
         {
@@ -84,29 +85,29 @@ namespace imp
         return erase_type<ty>() == erase_type<uy>();
     }
 
-	template<typename ty>
+    template<typename ty>
     constexpr const ty* resolve_type(type_erasure erasure, const void* ptr) noexcept
-	{
-		return erase_type<ty>() == erasure ? static_cast<const ty*>(ptr) : nullptr;
-	}
+    {
+        return erase_type<ty>() == erasure ? static_cast<const ty*>(ptr) : nullptr;
+    }
 
-	template<typename ty>
+    template<typename ty>
     constexpr ty* resolve_type(type_erasure erasure, void* ptr) noexcept
-	{
-		return erase_type<ty>() == erasure ? static_cast<ty*>(ptr) : nullptr;
-	}
+    {
+        return erase_type<ty>() == erasure ? static_cast<ty*>(ptr) : nullptr;
+    }
 
-	template<typename ty>
+    template<typename ty>
     constexpr const ty* resolve_type(type_erasure erasure, const ty* ptr) noexcept
-	{
-		return resolve_type<ty>(erasure, static_cast<const void*>(ptr));
-	}
+    {
+        return resolve_type<ty>(erasure, static_cast<const void*>(ptr));
+    }
 
-	template<typename ty>
-	constexpr ty* resolve_type(type_erasure erasure, ty* ptr) noexcept
-	{
-		return resolve_type<ty>(erasure, static_cast<void*>(ptr));
-	}
+    template<typename ty>
+    constexpr ty* resolve_type(type_erasure erasure, ty* ptr) noexcept
+    {
+        return resolve_type<ty>(erasure, static_cast<void*>(ptr));
+    }
 }
 
 template<>

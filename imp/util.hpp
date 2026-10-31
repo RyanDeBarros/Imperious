@@ -11,7 +11,7 @@ namespace imp
     }
 
     template<typename ty, typename... Rest>
-    inline ty max(const ty& first, const Rest&... rest)
+    constexpr ty max(const ty& first, const Rest&... rest)
     {
         return max(first, max(rest...));
     }
@@ -23,7 +23,7 @@ namespace imp
     }
 
     template<typename ty, typename... Rest>
-    inline ty min(const ty& first, const Rest&... rest)
+    constexpr ty min(const ty& first, const Rest&... rest)
     {
         return min(first, min(rest...));
     }
@@ -49,22 +49,22 @@ namespace imp
         }
     }
 
-    template<typename... args>
-    constexpr size_t max_of(const args&... args_)
+    template<typename... args_ty>
+    constexpr size_t max_of(const args_ty&... args)
     {
-        static_assert(sizeof...(args) > 0, "At least one argument required for imp::max_of");
-        return internal::max_of_impl(std::tie(args_...), std::make_index_sequence<sizeof...(args)>{});
+        static_assert(sizeof...(args_ty) > 0, "At least one argument required");
+        return internal::max_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(args_ty)>{});
     }
 
-    template<typename... args>
-    constexpr size_t min_of(const args&... args_)
+    template<typename... args_ty>
+    constexpr size_t min_of(const args_ty&... args)
     {
-        static_assert(sizeof...(args) > 0, "At least one argument required for imp::min_of");
-        return internal::min_of_impl(std::tie(args_...), std::make_index_sequence<sizeof...(args)>{});
+        static_assert(sizeof...(args_ty) > 0, "At least one argument required");
+        return internal::min_of_impl(std::tie(args...), std::make_index_sequence<sizeof...(args_ty)>{});
     }
     
     template<typename ty>
-    inline std::decay_t<ty> dupl(ty&& obj)
+    constexpr std::decay_t<ty> dupl(ty&& obj)
     {
         return std::forward<ty>(obj);
     }
