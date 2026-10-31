@@ -30,8 +30,15 @@ namespace imp
         if (str.size() >= 3)
         {
             std::string_view prefix = str.substr(0, 2);
-            if (prefix == "U+" || prefix == "0x" || prefix == "0X" || prefix == "\\u" || prefix == "\\U" || prefix == "0h")
+            if (prefix == "U+" ||
+                prefix == "0x" ||
+                prefix == "0X" ||
+                prefix == "\\u" ||
+                prefix == "\\U" ||
+                prefix == "0h")
+            {
                 return stoi_direct(str.substr(2), 16);
+            }
             else if ((str.substr(0, 3) == "&#x" || str.substr(0, 3) == "&#X") && str.ends_with(';'))
                 return stoi_direct(str.substr(3, str.size() - 3 - 1), 16);
             else if (str.substr(0, 2) == "&#" && str.ends_with(';'))

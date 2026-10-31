@@ -13,11 +13,11 @@ namespace imp
 
     // TODO in documentation, mention that klass must be passed as a paren-delimited parameter
 #define IMP_POLYMORPHIC_IMPL(klass) \
-	public: \
-		virtual std::unique_ptr<polymorphic> clone() const override \
-		{ \
+    public: \
+        virtual std::unique_ptr<polymorphic> clone() const override \
+        { \
             return std::make_unique<IMP_UNPAREN(klass)>(*this); \
-		}
+        }
 
     struct poly_default_impl
     {
@@ -33,21 +33,8 @@ namespace imp
         template<typename>
         friend class poly;
 
-        std::unique_ptr<ty> _ptr;
-
-        static std::unique_ptr<ty> clone(const polymorphic* p)
-        {
-            if (p == nullptr)
-                return nullptr;
-
-            auto cloned = p->clone();
-            ty* casted = dynamic_cast<ty*>(cloned.get());
-            if (!casted)
-                throw std::bad_cast();
-
-            cloned.release();
-            return std::unique_ptr<ty>(casted);
-        }
+    private:
+        std::unique_ptr<ty> ptr_;
 
     public:
         poly()
@@ -59,46 +46,46 @@ namespace imp
         }
 
         poly(poly_default_impl)
-            : _ptr(std::make_unique<ty>())
+            : ptr_(std::make_unique<ty>())
         {
         }
 
         poly(ty* raw)
-            : _ptr(raw)
+            : ptr_(raw)
         {
         }
 
         poly(std::unique_ptr<ty>&& ptr)
-            : _ptr(std::move(ptr))
+            : ptr_(std::move(ptr))
         {
         }
 
         poly(const poly& o)
-            : _ptr(clone(o.get()))
+            : ptr_(clone(o.get()))
         {
         }
 
         poly(poly&& o) noexcept
-            : _ptr(std::move(o._ptr))
+            : ptr_(std::move(o.ptr_))
         {
         }
 
         template<std::derived_from<ty> uy>
         poly(const poly<uy>& o)
-            : _ptr(clone(o.get()))
+            : ptr_(clone(o.get()))
         {
         }
 
         template<std::derived_from<ty> uy>
         poly(poly<uy>&& o) noexcept
-            : _ptr(std::move(o._ptr))
+            : ptr_(std::move(o.ptr_))
         {
         }
 
         poly& operator=(const poly& o)
         {
             if (this != &o)
-                _ptr = clone(o.get());
+                ptr_ = clone(o.get());
 
             return *this;
         }
@@ -106,7 +93,7 @@ namespace imp
         poly& operator=(poly&& o) noexcept
         {
             if (this != &o)
-                _ptr = std::move(o._ptr);
+                ptr_ = std::move(o.ptr_);
 
             return *this;
         }
@@ -114,25 +101,25 @@ namespace imp
         template<std::derived_from<ty> uy>
         poly& operator=(const poly<uy>& o)
         {
-            _ptr = clone(o.get());
+            ptr_ = clone(o.get());
             return *this;
         }
 
         template<std::derived_from<ty> uy>
         poly& operator=(poly<uy>&& o) noexcept
         {
-            _ptr = std::move(o._ptr);
+            ptr_ = std::move(o.ptr_);
             return *this;
         }
 
         ty& operator*()
         {
-            return *_ptr;
+            return *ptr_;
         }
 
         const ty& operator*() const
         {
-            return *_ptr;
+            return *ptr_;
         }
 
         ty* operator->()
@@ -147,12 +134,12 @@ namespace imp
 
         ty* get()
         {
-            return _ptr.get();
+            return ptr_.get();
         }
 
         const ty* get() const
         {
-            return _ptr.get();
+            return ptr_.get();
         }
 
         template<typename uy>
@@ -175,7 +162,22 @@ namespace imp
 
         operator bool() const
         {
-            return _ptr.get() != nullptr;
+            return ptr_.get() != nullptr;
+        }
+
+    private:
+        static std::unique_ptr<ty> clone(const polymorphic* p)
+        {
+            if (p == nullptr)
+                return nullptr;
+
+            auto cloned = p->clone();
+            ty* casted = dynamic_cast<ty*>(cloned.get());
+            if (!casted)
+                throw std::bad_cast();
+
+            cloned.release();
+            return std::unique_ptr<ty>(casted);
         }
     };
 

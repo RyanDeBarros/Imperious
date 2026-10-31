@@ -4,83 +4,87 @@
 
 namespace imp
 {
-	template<typename ty>
-	class modifiable
-	{
-		bool _dirty = false;
-		ty _obj;
+    template<typename ty>
+    class modifiable
+    {
+        bool dirty_ = false;
+        ty obj_;
 
-	public:
-		modifiable(ty ini = ty()) : _obj(ini) {}
+    public:
+        modifiable(ty ini = ty())
+            : obj_(ini)
+        {
+        }
 
-		modifiable(const modifiable& o)
-		{
-			set(o._obj);
-		}
+        modifiable(const modifiable& o)
+        {
+            set(o.obj_);
+        }
 
-		modifiable(modifiable&& o) noexcept
-			: _dirty(o._dirty), _obj(std::move(o._obj))
-		{
-		}
+        modifiable(modifiable&& o) noexcept
+            : dirty_(o.dirty_)
+            , obj_(std::move(o.obj_))
+        {
+        }
 
-		modifiable& operator=(const modifiable& o)
-		{
-			if (this != &o)
-				set(o._obj);
+        modifiable& operator=(const modifiable& o)
+        {
+            if (this != &o)
+                set(o.obj_);
 
-			return *this;
-		}
+            return *this;
+        }
 
-		modifiable& operator=(modifiable&& o)
-		{
-			if (this != &o)
-			{
-				_dirty = o._dirty;
-				_obj = std::move(o._obj);
-			}
+        modifiable& operator=(modifiable&& o)
+        {
+            if (this != &o)
+            {
+                dirty_ = o.dirty_;
+                obj_ = std::move(o.obj_);
+            }
 
-			return *this;
-		}
+            return *this;
+        }
 
-		modifiable& operator=(ty val)
-		{
-			set(val);
-			return *this;
-		}
+        modifiable& operator=(ty val)
+        {
+            set(val);
+            return *this;
+        }
 
-		operator ty() const
-		{
-			return get();
-		}
+        operator ty() const
+        {
+            return get();
+        }
 
-		ty get() const
-		{
-			return _obj;
-		}
+        ty get() const
+        {
+            return obj_;
+        }
 
-		void set(ty val)
-		{
-			if (_obj != val)
-			{
-				_obj = val;
-				_dirty = true;
-			}
-		}
+        void set(ty val)
+        {
+            if (obj_ != val)
+            {
+                obj_ = val;
+                dirty_ = true;
+            }
+        }
 
-		bool modified()
-		{
-			return _dirty;
-		}
+        bool modified()
+        {
+            return dirty_;
+        }
 
-		bool consume_modified()
-		{
-			if (_dirty)
-			{
-				_dirty = false;
-				return true;
-			}
-			else
-				return false;
-		}
-	};
+        bool consume_modified()
+        {
+            if (dirty_)
+            {
+                dirty_ = false;
+                return true;
+            }
+            else
+                return false;
+        }
+    };
 }

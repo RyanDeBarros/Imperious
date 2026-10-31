@@ -4,43 +4,43 @@
 
 namespace imp
 {
-	template<typename derived>
-	struct instance_guard
-	{
-	private:
-		static inline derived* _instance = nullptr;
+    template<typename derived>
+    struct instance_guard
+    {
+    private:
+        static inline derived* instance_ = nullptr;
 
-	public:
-		instance_guard()
-		{
-			if (_instance)
-				throw std::logic_error("existing active instance"); // TODO class name prefix + imp::error ?
+    public:
+        instance_guard()
+        {
+            if (instance_)
+                throw std::logic_error("existing active instance"); // TODO class name prefix + imp::error ?
 
-			_instance = static_cast<derived*>(this);
-		}
+            instance_ = static_cast<derived*>(this);
+        }
 
-		instance_guard(const instance_guard&) = delete;
-		instance_guard(instance_guard&&) = delete;
-		instance_guard& operator=(const instance_guard&) = delete;
-		instance_guard& operator=(instance_guard&&) = delete;
+        instance_guard(const instance_guard&) = delete;
+        instance_guard(instance_guard&&) = delete;
+        instance_guard& operator=(const instance_guard&) = delete;
+        instance_guard& operator=(instance_guard&&) = delete;
 
-		~instance_guard()
-		{
-			if (_instance == static_cast<derived*>(this))
-				_instance = nullptr;
-		}
+        ~instance_guard()
+        {
+            if (instance_ == static_cast<derived*>(this))
+                instance_ = nullptr;
+        }
 
-		static derived& instance()
-		{
-			if (_instance)
-				return *_instance;
-			else
-				throw std::logic_error("no active instance"); // TODO class name prefix + imp::error ?
-		}
+        static derived& instance()
+        {
+            if (instance_)
+                return *instance_;
+            else
+                throw std::logic_error("no active instance"); // TODO class name prefix + imp::error ?
+        }
 
-		static derived* active_instance()
-		{
-			return _instance;
-		}
-	};
+        static derived* active_instance()
+        {
+            return instance_;
+        }
+    };
 }

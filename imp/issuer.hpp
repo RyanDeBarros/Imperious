@@ -6,7 +6,8 @@
 namespace imp
 {
     template<typename derived>
-    class issuer : public std::enable_shared_from_this<issuer<derived>>
+    class issuer
+        : public std::enable_shared_from_this<issuer<derived>>
     {
         using super = std::enable_shared_from_this<issuer<derived>>;
 
@@ -25,14 +26,21 @@ namespace imp
             return std::make_shared<derived>(std::forward<args>(args_)...);
         }
 
+        ticket issue()
+        {
+            return ticket(super::shared_from_this());
+        }
+
         class ticket
         {
             friend class issuer<derived>;
-            std::weak_ptr<issuer<derived>> _issuer;
+
+        private:
+            std::weak_ptr<issuer<derived>> issuer_;
 
         protected:
-            ticket(std::weak_ptr<issuer<derived>>&& _issuer)
-                : _issuer(std::move(_issuer))
+            ticket(std::weak_ptr<issuer<derived>>&& issuer)
+                : issuer_(std::move(issuer))
             {
             }
 
@@ -41,49 +49,52 @@ namespace imp
 
             bool is_valid() const
             {
-                return !_issuer.expired();
+                return !issuer_.expired();
             }
 
         public:
             class accessor
             {
                 friend class issuer<derived>::ticket;
-                std::shared_ptr<issuer<derived>> _issuer;
 
+            private:
+                std::shared_ptr<issuer<derived>> issuer_;
+
+            private:
                 accessor(std::shared_ptr<issuer>&& issuer)
-                    : _issuer(std::move(issuer))
+                    : issuer_(std::move(issuer))
                 {
                 }
 
             public:
                 const derived* get() const
                 {
-                    if (_issuer)
-                        return static_cast<const derived*>(_issuer.get());
+                    if (issuer_)
+                        return static_cast<const derived*>(issuer_.get());
                     else
                         return nullptr;
                 }
 
                 derived* get()
                 {
-                    if (_issuer)
-                        return static_cast<derived*>(_issuer.get());
+                    if (issuer_)
+                        return static_cast<derived*>(issuer_.get());
                     else
                         return nullptr;
                 }
 
                 const derived& operator*() const
                 {
-                    if (_issuer)
-                        return static_cast<const derived&>(*_issuer);
+                    if (issuer_)
+                        return static_cast<const derived&>(*issuer_);
                     else
                         throw std::runtime_error("null pointer"); // TODO imp error ?
                 }
 
                 derived& operator*()
                 {
-                    if (_issuer)
-                        return static_cast<derived&>(*_issuer);
+                    if (issuer_)
+                        return static_cast<derived&>(*issuer_);
                     else
                         throw std::runtime_error("null pointer"); // TODO imp error ?
                 }
@@ -100,106 +111,108 @@ namespace imp
 
                 operator bool() const
                 {
-                    return _issuer && _issuer.get();
+                    return issuer_ && issuer_.get();
                 }
 
                 void reset()
                 {
-                    _issuer.reset();
+                    issuer_.reset();
                 }
             };
 
         protected:
             accessor lock() const
             {
-                return accessor(_issuer.lock());
+                return accessor(issuer_.lock());
             }
 
             void reset()
             {
-                _issuer.reset();
+                issuer_.reset();
             }
 
-            void reset(issuer<derived>& _issuer)
+            void reset(issuer<derived>& issuer_)
             {
-                this->_issuer = _issuer.weak_from_this();
+                this->issuer_ = issuer_.weak_from_this();
             }
         };
-
-        ticket issue()
-        {
-            return ticket(super::shared_from_this());
-        }
     };
 
-    template<typename derived> requires std::derived_from<derived, issuer<derived>>
+    template<typename derived>
+        requires std::derived_from<derived, issuer<derived>>
     class issuer_instance
     {
-        std::shared_ptr<derived> _issuer;
-        derived& _cache;
+        std::shared_ptr<derived> issuer_;
+        derived& cache_;
 
     public:
-        template<typename... Args>
-        issuer_instance(Args&&... args)
-            : _issuer(issuer<derived>::instantiate(std::forward<Args>(args)...)), _cache(*_issuer)
+        template<typename... args_ty>
+        issuer_instance(args_ty&&... args)
+            : issuer_(issuer<derived>::instantiate(std::forward<args_ty>(args)...))
+            , cache_(*issuer_)
         {
         }
 
-        issuer_instance(const issuer_instance<derived>& other)
-            : _issuer(issuer<derived>::instantiate(*other._issuer)), _cache(*_issuer)
+        issuer_instance(const issuer_instance<derived>& o)
+            : issuer_(issuer<derived>::instantiate(*o.issuer_))
+            , cache_(*issuer_)
         {
         }
 
-        issuer_instance(issuer_instance<derived>&& other) noexcept
-            : _issuer(issuer<derived>::instantiate(std::move(*other._issuer))), _cache(*_issuer)
+        issuer_instance(issuer_instance<derived>&& o) noexcept
+            : issuer_(issuer<derived>::instantiate(std::move(*o.issuer_)))
+            , cache_(*issuer_)
         {
         }
 
-        issuer_instance<derived>& operator=(const issuer_instance<derived>& other)
+        issuer_instance<derived>& operator=(const issuer_instance<derived>& o)
         {
-            if (this != &other)
-                *_issuer = *other._issuer;
+            if (this != &o)
+                *issuer_ = *o.issuer_;
+
             return *this;
         }
 
-        issuer_instance<derived>& operator=(issuer_instance<derived>&& other) noexcept
+        issuer_instance<derived>& operator=(issuer_instance<derived>&& o) noexcept
         {
-            if (this != &other)
-                *_issuer = std::move(*other._issuer);
+            if (this != &o)
+                *issuer_ = std::move(*o.issuer_);
+
             return *this;
         }
 
         const derived& operator*() const
         {
-            return _cache;
+            return cache_;
         }
 
         derived& operator*()
         {
-            return _cache;
+            return cache_;
         }
 
         const derived* operator->() const
         {
-            return &_cache;
+            return &cache_;
         }
 
         derived* operator->()
         {
-            return &_cache;
+            return &cache_;
         }
 
         const derived* address() const
         {
-            return &_cache;
+            return &cache_;
         }
 
         derived* address()
         {
-            return &_cache;
+            return &cache_;
         }
     };
 
-    template<typename derived> requires std::derived_from<derived, issuer<derived>>
+    template<typename derived>
+        requires std::derived_from<derived, issuer<derived>>
     using ticket = issuer<derived>::ticket;
 }
