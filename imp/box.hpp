@@ -65,19 +65,25 @@ namespace imp
 
         template<typename ty>
         box(ty* raw)
-            : raw_(raw), type_(erase_type<ty>()), ops_(&kOps<ty>)
+            : raw_(raw)
+            , type_(erase_type<ty>())
+            , ops_(&kOps<ty>)
         {
         }
 
         box(const box& o)
-            : raw_(o.try_copy(o.raw_)), type_(o.type_), ops_(o.ops_)
+            : raw_(o.try_copy(o.raw_))
+            , type_(o.type_)
+            , ops_(o.ops_)
         {
             if (o.raw_ && !raw_)
                 throw std::logic_error("Attempted to copy a non-copyable imp::box"); // TODO imp::error ?
         }
 
         box(box&& o) noexcept
-            : raw_(o.raw_), type_(o.type_), ops_(o.ops_)
+            : raw_(o.raw_)
+            , type_(o.type_)
+            , ops_(o.ops_)
         {
             o.raw_ = nullptr;
             o.type_ = type_erasure();
