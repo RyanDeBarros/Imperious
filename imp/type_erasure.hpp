@@ -9,12 +9,12 @@ namespace imp
 {
     namespace internal
     {
-        constexpr std::uint64_t fnv1a_hash(std::string_view str) noexcept
+        constexpr uint64_t fnv1a_hash(std::string_view str) noexcept
         {
-            std::uint64_t hash = 0xcbf29ce484222325ULL;
+            uint64_t hash = 0xcbf29ce484222325ULL;
             for (char c : str)
             {
-                hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(c));
+                hash ^= static_cast<uint64_t>(static_cast<unsigned char>(c));
                 hash *= 0x00000100000001B3ULL;
             }
             return hash;
@@ -32,7 +32,7 @@ namespace imp
     }
 
     template<typename ty>
-    constexpr std::uint64_t type_id() noexcept
+    constexpr uint64_t type_id() noexcept
     {
         return internal::fnv1a_hash(compiler_type_name<std::remove_cvref_t<ty>>());
     }
@@ -43,17 +43,17 @@ namespace imp
         friend constexpr type_erasure erase_type() noexcept;
 
     private:
-        std::uint64_t _uid;
+        uint64_t uid_;
 
     private:
-        constexpr explicit type_erasure(std::uint64_t uid) noexcept
-            : _uid(uid)
+        constexpr explicit type_erasure(uint64_t uid) noexcept
+            : uid_(uid)
         {
         }
 
     public:
         constexpr type_erasure() noexcept
-            : _uid(type_id<void>())
+            : uid_(type_id<void>())
         {
         }
 
@@ -63,13 +63,13 @@ namespace imp
         [[nodiscard]]
         constexpr size_t hash() const noexcept
         {
-            return static_cast<size_t>(_uid);
+            return static_cast<size_t>(uid_);
         }
 
         [[nodiscard]]
-        constexpr std::uint64_t uid() const
+        constexpr uint64_t uid() const
         {
-            return _uid;
+            return uid_;
         }
     };
 
